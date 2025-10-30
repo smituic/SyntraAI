@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Syntra AI – Bacci Pizzeria Assistant</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <h1>Syntra AI – Bacci Pizzeria Assistant</h1>
+
+  <div id="chat-box" class="chat-box"></div>
+
+  <div class="input-area">
+    <input type="text" id="message-input" placeholder="Type your message…" autocomplete="off" />
+    <button id="send-btn">Send</button>
+  </div>
+
+  <script>
+    const chatBox = document.getElementById("chat-box");
+    const input = document.getElementById("message-input");
+    const sendBtn = document.getElementById("send-btn");
+
+    function addMessage(role, text) {
+      const el = document.createElement("div");
+      el.className = "message " + role;
+      el.textContent = text;
+      chatBox.appendChild(el);
+      chatBox.scrollTop = chatBox.scrollHeight;
+      return el; // return the node so we can update it later
+    }
+
+    async function sendMessage() {
+      const text = input.value.trim();
+      if (!text) return;
+
+      // Add user bubble
+      addMessage("user", text);
+      input.value = "";
+
+      // Add AI placeholder and keep a handle to it
+      const aiBubble = addMessage("ai", "…");
+
+      try {
+        const res = await fetch("/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: text }),
+        });
+        const data = await res.json();
+        aiBubble.textContent = data.response ?? "Sorry, no response.";
+      } catch (err) {
+        aiBubble.textContent = "Network error. Please try again.";
+      }
+
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    sendBtn.addEventListener("click", sendMessage);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") sendMessage();
+    });
+  </script>
+</body>
+</html>
