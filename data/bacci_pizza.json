@@ -1,0 +1,13 @@
+{
+    "name": "Bacci Pizza",
+    "hours": "10am - 10pm",
+    "address": "123 Main Street, Chicago",
+    "phone": "312-555-1212",
+    "menu": [
+      {"item": "Margherita Pizza", "price": 12.99, "desc": "Classic tomato, mozzarella, basil"}
+    ],
+    "faq": [
+      {"question": "Do you offer delivery?", "answer": "Yes, via DoorDash and Uber Eats."}
+    ]
+  }
+  
