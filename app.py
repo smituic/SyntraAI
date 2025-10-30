@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
 import os
+import json
 from openai import OpenAI
 from datetime import datetime
 import pytz
@@ -32,22 +33,31 @@ templates = Jinja2Templates(directory="templates")
 # In-memory chat history
 chat_history = []
 
+
+# load restaurant data
+def load_restaurant_data(file_name: str):
+    """Load restaurant data JSON from /data folder."""
+    file_path = os.path.join("data", file_name)
+    with open(file_path, "r") as f:
+        return json.load(f)
+    
 # Bacci menu + system prompt
-BACCI_MENU = """
-Bacci Pizzeria (Chicago) — highlights:
-- Jumbo Slice: Cheese $4.99, Sausage or Pepperoni $5.49, Specialty Slice $5.99.
-- Hand-Tossed Pizzas: Medium 14" $14.95, Family 18" $19.95, Party 24" $27.95.
-- Starters: Jumbo Wings (5pc) $4.95.
-- Sandwiches: Italian Beef $5.95, Bacci Burger $7.95.
-Notes: Founded 1996 on Taylor St (Little Italy), famous for jumbo slice; multiple Chicago locations.
-"""
+
+# Load restaurant info dynamically from JSON
+restaurant_data = load_restaurant_data("bacci_pizza.json")
+
+# Convert menu dict to readable text for the system prompt
+menu_text = "\n".join([
+    f"- {category}: {', '.join([f'{item} ${price}' for item, price in items.items()])}"
+    for category, items in restaurant_data["menu"].items()
+])
 
 SYSTEM_PROMPT = (
-    "You are Syntra AI, an elegant, professional restaurant assistant for Bacci Pizzeria in Chicago. "
+    f"You are Syntra AI, an elegant, professional restaurant assistant for {restaurant_data['name']} in {restaurant_data['location']}. "
     "Answer with warmth and precision like a maître d’. Handle menu questions, dietary needs, hours, locations, "
-    "basic reservations info, and dish recommendations. If unsure about specifics (e.g., today’s hours for a given store), "
-    "politely say you can check with staff. Keep answers concise and helpful.\n\n"
-    f"{BACCI_MENU}\n"
+    "basic reservations info, and dish recommendations. If unsure about specifics, politely say you can check with staff. "
+    "Keep answers concise and helpful.\n\n"
+    f"{restaurant_data['description']}\n\nMenu:\n{menu_text}\n"
 )
 
 def ask_syntra(user_text: str) -> str:

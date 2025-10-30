@@ -1,13 +1,25 @@
 {
-    "name": "Bacci Pizza",
-    "hours": "10am - 10pm",
-    "address": "123 Main Street, Chicago",
-    "phone": "312-555-1212",
-    "menu": [
-      {"item": "Margherita Pizza", "price": 12.99, "desc": "Classic tomato, mozzarella, basil"}
-    ],
-    "faq": [
-      {"question": "Do you offer delivery?", "answer": "Yes, via DoorDash and Uber Eats."}
-    ]
+    "name": "Bacci Pizzeria",
+    "location": "Chicago",
+    "description": "Bacci Pizzeria (Chicago) — highlights: Founded 1996 on Taylor St (Little Italy), famous for jumbo slice; multiple Chicago locations.",
+    "menu": {
+      "Jumbo Slice": {
+        "Cheese": 4.99,
+        "Sausage or Pepperoni": 5.49,
+        "Specialty Slice": 5.99
+      },
+      "Hand-Tossed Pizzas": {
+        "Medium 14\"": 14.95,
+        "Family 18\"": 19.95,
+        "Party 24\"": 27.95
+      },
+      "Starters": {
+        "Jumbo Wings (5pc)": 4.95
+      },
+      "Sandwiches": {
+        "Italian Beef": 5.95,
+        "Bacci Burger": 7.95
+      }
+    }
   }
   
