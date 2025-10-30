@@ -1,0 +1,23 @@
+{
+    "name": "Starbucks",
+    "location": "Worldwide",
+    "founded": 1971,
+    "specialties": ["Coffee", "Tea", "Pastries", "Frappuccino"],
+    "menu": {
+      "Beverages": {
+        "Caffè Latte": "$4.25",
+        "Cappuccino": "$4.25",
+        "Caramel Frappuccino": "$5.25"
+      },
+      "Food": {
+        "Blueberry Muffin": "$3.50",
+        "Chocolate Croissant": "$3.95"
+      },
+      "Extras": {
+        "Almond Milk": "$0.50",
+        "Extra Shot": "$0.75"
+      }
+    },
+    "notes": "Global coffeehouse chain known for premium coffee and seasonal drinks."
+  }
+  

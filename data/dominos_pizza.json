@@ -1,0 +1,22 @@
+{
+    "name": "Domino's Pizza",
+    "location": "Various US locations",
+    "founded": 1960,
+    "specialties": ["Hand Tossed Pizza", "Cheese Burst", "Pasta Bowls", "Desserts"],
+    "menu": {
+      "Pizzas": {
+        "Pepperoni Feast": "$13.99",
+        "Veggie Lovers": "$12.99",
+        "Cheese Burst": "$11.99"
+      },
+      "Sides": {
+        "Garlic Breadsticks": "$4.99",
+        "Chicken Kickers": "$6.99"
+      },
+      "Desserts": {
+        "Chocolate Lava Crunch Cake": "$4.99"
+      }
+    },
+    "notes": "Fast delivery and online ordering. Known for 30-minute delivery promise."
+  }
+  

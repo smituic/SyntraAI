@@ -1,0 +1,23 @@
+{
+    "name": "Chipotle Mexican Grill",
+    "location": "Various US locations",
+    "founded": 1993,
+    "specialties": ["Burritos", "Bowls", "Tacos", "Salads"],
+    "menu": {
+      "Burritos": {
+        "Chicken Burrito": "$8.50",
+        "Steak Burrito": "$9.50",
+        "Veggie Burrito": "$7.95"
+      },
+      "Bowls": {
+        "Chicken Bowl": "$8.50",
+        "Barbacoa Bowl": "$9.50"
+      },
+      "Sides": {
+        "Chips & Guacamole": "$3.95",
+        "Chips & Salsa": "$2.95"
+      }
+    },
+    "notes": "Fast-casual Mexican food chain, customizable bowls and burritos."
+  }
+  

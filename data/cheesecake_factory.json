@@ -1,0 +1,22 @@
+{
+    "name": "The Cheesecake Factory",
+    "location": "Various US locations",
+    "founded": 1978,
+    "specialties": ["Cheesecakes", "Burgers", "Pasta", "Salads"],
+    "menu": {
+      "Appetizers": {
+        "Avocado Eggrolls": "$10.95",
+        "Buffalo Blasts": "$11.95"
+      },
+      "Entrees": {
+        "Fettuccini Alfredo": "$19.95",
+        "Crispy Chicken Costoletta": "$21.95"
+      },
+      "Desserts": {
+        "Original Cheesecake": "$9.95",
+        "Godiva Chocolate Cheesecake": "$10.95"
+      }
+    },
+    "notes": "Known for its extensive menu and decadent desserts. Popular nationwide."
+  }
+  

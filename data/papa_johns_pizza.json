@@ -1,0 +1,22 @@
+{
+    "name": "Papa John's",
+    "location": "Nationwide, USA",
+    "founded": 1984,
+    "specialties": ["Better Ingredients, Better Pizza", "Special Garlic Sauce", "Stuffed Crust Pizza"],
+    "menu": {
+      "Pizzas": {
+        "The Works": "$14.99",
+        "Garden Fresh": "$13.49",
+        "BBQ Chicken Bacon": "$15.99"
+      },
+      "Sides": {
+        "Garlic Knots": "$5.99",
+        "Cheese Sticks": "$6.49"
+      },
+      "Desserts": {
+        "Cinnamon Pull Aparts": "$5.49"
+      }
+    },
+    "notes": "Known for quality ingredients and signature garlic dipping sauce."
+  }
+  
