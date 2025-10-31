@@ -7,8 +7,14 @@
 </head>
 <body>
   <div class="chat-container">
-    <h1>Syntra AI – Restaurant Assistant</h1>
-    <div class="tagline">🍕 Serving Chicago since 1996 • Powered by <b>Syntra AI</b></div>
+    <h1 id="header-title">Syntra AI – Restaurant Assistant</h1>
+    <div class="tagline">🍽 Select a restaurant to begin your chat</div>
+
+    <div class="restaurant-select">
+      <select id="restaurant-dropdown">
+        <option value="">-- Choose a restaurant --</option>
+      </select>
+    </div>
 
     <div id="chat-box" class="chat-box"></div>
     <div id="typing" class="typing hidden">Syntra AI is typing<span class="dots">...</span></div>
@@ -24,6 +30,31 @@
     const userInput = document.getElementById("user-input");
     const sendBtn = document.getElementById("send-btn");
     const typing = document.getElementById("typing");
+    const dropdown = document.getElementById("restaurant-dropdown");
+    const headerTitle = document.getElementById("header-title");
+    let selectedRestaurant = "";
+
+    async function loadRestaurants() {
+      const res = await fetch("/restaurants");
+      const data = await res.json();
+      data.restaurants.forEach(name => {
+        const option = document.createElement("option");
+        option.value = name;
+        option.textContent = name;
+        dropdown.appendChild(option);
+      });
+    }
+
+    dropdown.addEventListener("change", () => {
+      selectedRestaurant = dropdown.value;
+      headerTitle.textContent = selectedRestaurant
+        ? `${selectedRestaurant} | Syntra AI`
+        : "Syntra AI – Restaurant Assistant";
+      chatBox.innerHTML = "";
+      if (selectedRestaurant) {
+        appendMessage("bot", `Welcome to ${selectedRestaurant}! How may I help you today?`);
+      }
+    });
 
     function appendMessage(sender, text) {
       const msg = document.createElement("div");
@@ -35,21 +66,16 @@
 
     async function sendMessage() {
       const message = userInput.value.trim();
-      if (!message) return;
-
+      if (!message || !selectedRestaurant) return;
       appendMessage("user", message);
       userInput.value = "";
-
       typing.classList.remove("hidden");
-
       const res = await fetch("/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message }),
+        body: JSON.stringify({ message, restaurant: selectedRestaurant }),
       });
-
       const data = await res.json();
-
       typing.classList.add("hidden");
       typeEffect(data.response);
     }
@@ -58,7 +84,6 @@
       const msg = document.createElement("div");
       msg.className = "bot-msg";
       chatBox.appendChild(msg);
-
       function typingAnimation() {
         if (i < text.length) {
           msg.textContent += text.charAt(i);
@@ -75,12 +100,8 @@
       if (e.key === "Enter") sendMessage();
     });
 
-    // Initial greeting
     window.onload = () => {
-      appendMessage("bot", "Good morning! Welcome to Bacci Pizzeria 🍕 How may I assist you today?");
-      setTimeout(() => {
-        appendMessage("bot", "We have Pizzas, Pastas, Salads, Wings, and Desserts. Would you like to see today’s specials?");
-      }, 1200);
+      loadRestaurants();
     };
   </script>
 </body>

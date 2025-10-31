@@ -30,9 +30,24 @@ h1 {
 .tagline {
   text-align: center;
   font-size: 14px;
-  padding: 5px;
+  padding: 6px;
   background: #f8f8f8;
   color: #444;
+}
+
+.restaurant-select {
+  text-align: center;
+  padding: 8px;
+  background: #eef1f6;
+}
+
+.restaurant-select select {
+  padding: 8px;
+  font-size: 14px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  color: #12368c;
+  cursor: pointer;
 }
 
 .chat-box {
