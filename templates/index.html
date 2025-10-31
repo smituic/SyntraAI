@@ -65,14 +65,14 @@
       window.speechSynthesis.cancel(); // clear old voices
       const utter = new SpeechSynthesisUtterance(next);
       utter.lang = "en-US";
-      utter.rate = 1.35; // 🗣️ smooth, natural rate
+      utter.rate = 1.2; // 🎯 slower, natural conversational pace
       utter.pitch = 1.05;
       utter.voice = selectedVoice || null;
       speaking = true;
 
       utter.onend = () => {
         speaking = false;
-        setTimeout(processSpeechQueue, 100); // small pause between sentences
+        setTimeout(processSpeechQueue, 120); // small pause between sentences
       };
 
       window.speechSynthesis.speak(utter);
