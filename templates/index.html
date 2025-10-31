@@ -45,7 +45,7 @@
         dropdown.appendChild(option);
       });
 
-      // 🧩 NEW: Auto-select last chosen restaurant (if exists)
+      // 🧠 Auto-select last restaurant (if saved)
       const lastRestaurant = localStorage.getItem("lastRestaurant");
       if (lastRestaurant) {
         dropdown.value = lastRestaurant;
@@ -55,7 +55,7 @@
       }
     }
 
-    // 🧩 Load chat history for selected restaurant
+    // 🧠 Load chat history for selected restaurant
     async function loadHistory(restaurantName) {
       if (!restaurantName) return;
       chatBox.innerHTML = "";
@@ -63,16 +63,18 @@
       const data = await res.json();
 
       if (data.history.length > 0) {
-        data.history.forEach(msg => appendMessage(msg.role === "user" ? "user" : "bot", msg.message));
+        data.history.forEach(msg =>
+          appendMessage(msg.role === "user" ? "user" : "bot", msg.message)
+        );
       } else {
         appendMessage("bot", `Welcome to ${restaurantName}! How may I help you today?`);
       }
     }
 
-    // 🧩 When restaurant is changed manually
+    // When restaurant changes manually
     dropdown.addEventListener("change", async () => {
       selectedRestaurant = dropdown.value;
-      localStorage.setItem("lastRestaurant", selectedRestaurant); // Save choice
+      localStorage.setItem("lastRestaurant", selectedRestaurant); // save choice
       chatBox.innerHTML = "";
 
       if (!selectedRestaurant) {
@@ -113,7 +115,7 @@
       typeEffect(data.response);
     }
 
-    // Typing animation for bot replies
+    // Typing animation
     function typeEffect(text, i = 0) {
       const msg = document.createElement("div");
       msg.className = "bot-msg";
