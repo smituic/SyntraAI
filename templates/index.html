@@ -34,47 +34,54 @@
     const headerTitle = document.getElementById("header-title");
     let selectedRestaurant = "";
 
-    // 🧩 Load restaurants from backend
+    // --- Append messages ---
+    function appendMessage(sender, text) {
+      const msg = document.createElement("div");
+      msg.className = sender === "user" ? "user-msg" : "bot-msg";
+      msg.textContent = text;
+      chatBox.appendChild(msg);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // --- Load restaurants ---
     async function loadRestaurants() {
       try {
         const res = await fetch("/restaurants");
         const data = await res.json();
-
+        dropdown.innerHTML = '<option value="">-- Choose a restaurant --</option>';
         data.restaurants.forEach(name => {
           const option = document.createElement("option");
-          option.value = name;
-          option.textContent = name;
+          option.value = name.trim();
+          option.textContent = name.trim();
           dropdown.appendChild(option);
         });
+        return data.restaurants;
       } catch (err) {
         console.error("Failed to load restaurants:", err);
+        return [];
       }
     }
 
-    // 🧠 Load chat history for selected restaurant
+    // --- Load chat history ---
     async function loadHistory(restaurantName) {
       if (!restaurantName) return;
       chatBox.innerHTML = "";
-      try {
-        const res = await fetch(`/history/${restaurantName.replace(" ", "_")}`);
-        const data = await res.json();
+      const res = await fetch(`/history/${restaurantName.replaceAll(" ", "_")}`);
+      const data = await res.json();
 
-        if (data.history && data.history.length > 0) {
-          data.history.forEach(msg =>
-            appendMessage(msg.role === "user" ? "user" : "bot", msg.message)
-          );
-        } else {
-          appendMessage("bot", `Welcome to ${restaurantName}! How may I help you today?`);
-        }
-      } catch (err) {
-        appendMessage("bot", "Error loading chat history.");
+      if (data.history?.length) {
+        data.history.forEach(m =>
+          appendMessage(m.role === "user" ? "user" : "bot", m.message)
+        );
+      } else {
+        appendMessage("bot", `Welcome to ${restaurantName}! How may I help you today?`);
       }
     }
 
-    // 🧩 When restaurant changes manually
+    // --- Change restaurant manually ---
     dropdown.addEventListener("change", async () => {
       selectedRestaurant = dropdown.value;
-      localStorage.setItem("lastRestaurant", selectedRestaurant); // save choice
+      localStorage.setItem("lastRestaurant", selectedRestaurant);
       chatBox.innerHTML = "";
 
       if (!selectedRestaurant) {
@@ -86,16 +93,7 @@
       await loadHistory(selectedRestaurant);
     });
 
-    // 🧩 Append messages to chat box
-    function appendMessage(sender, text) {
-      const msg = document.createElement("div");
-      msg.className = sender === "user" ? "user-msg" : "bot-msg";
-      msg.textContent = text;
-      chatBox.appendChild(msg);
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
-
-    // 🧩 Send message
+    // --- Send message ---
     async function sendMessage() {
       const message = userInput.value.trim();
       if (!message || !selectedRestaurant) return;
@@ -115,7 +113,6 @@
       typeEffect(data.response);
     }
 
-    // 🧩 Typing animation for bot replies
     function typeEffect(text, i = 0) {
       const msg = document.createElement("div");
       msg.className = "bot-msg";
@@ -131,22 +128,34 @@
       typingAnimation();
     }
 
-    // 🧩 Detect Enter key
     sendBtn.onclick = sendMessage;
-    userInput.addEventListener("keypress", (e) => {
+    userInput.addEventListener("keypress", e => {
       if (e.key === "Enter") sendMessage();
     });
 
-    // 🧩 Auto-load last restaurant on page open
+    // --- Auto-load last restaurant on page open ---
     window.onload = async () => {
-      await loadRestaurants(); // wait for list to load
+      const restaurants = await loadRestaurants();
       const lastRestaurant = localStorage.getItem("lastRestaurant");
 
+      // ✅ NEW FIX: wait until dropdown fully populated and retry until found
       if (lastRestaurant) {
-        selectedRestaurant = lastRestaurant;
-        dropdown.value = lastRestaurant;
-        headerTitle.textContent = `${selectedRestaurant} | Syntra AI`;
-        await loadHistory(selectedRestaurant);
+        let tries = 0;
+        const interval = setInterval(async () => {
+          const exists = Array.from(dropdown.options).some(
+            opt => opt.value.toLowerCase() === lastRestaurant.toLowerCase()
+          );
+          if (exists || tries > 10) {
+            clearInterval(interval);
+            if (exists) {
+              selectedRestaurant = lastRestaurant;
+              dropdown.value = lastRestaurant;
+              headerTitle.textContent = `${selectedRestaurant} | Syntra AI`;
+              await loadHistory(selectedRestaurant);
+            }
+          }
+          tries++;
+        }, 300);
       }
     };
   </script>
