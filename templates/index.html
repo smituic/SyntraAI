@@ -2,107 +2,105 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Syntra AI – Restaurant Assistant</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <title>Syntra AI Chat</title>
+  <style>
+    body { font-family: Arial; background: #0e0e0e; color: white; display: flex; flex-direction: column; align-items: center; }
+    .container { width: 420px; margin-top: 60px; background: #1c1c1c; padding: 20px; border-radius: 12px; box-shadow: 0 0 10px #00ffcc; }
+    select, input, button { width: 100%; padding: 10px; margin: 6px 0; border-radius: 6px; border: none; }
+    button { background: #00ffcc; color: #111; font-weight: bold; cursor: pointer; }
+    #chatBox { margin-top: 20px; height: 300px; overflow-y: auto; background: #222; padding: 10px; border-radius: 8px; }
+    .user { text-align: right; color: #00ffcc; }
+    .bot { text-align: left; color: #fff; }
+    .typing { font-style: italic; color: gray; }
+  </style>
 </head>
 <body>
-  <div class="chat-container">
-    <h1 id="header-title">Syntra AI – Restaurant Assistant</h1>
-    <div class="tagline">🍽 Select a restaurant to begin your chat</div>
+  <div class="container">
+    <h2>Syntra AI Chat</h2>
 
-    <div class="restaurant-select">
-      <select id="restaurant-dropdown">
-        <option value="">-- Choose a restaurant --</option>
-      </select>
-    </div>
+    <select id="restaurant" onchange="loadHistory()">
+      <option value="">Select Restaurant</option>
+    </select>
 
-    <div id="chat-box" class="chat-box"></div>
-    <div id="typing" class="typing hidden">Syntra AI is typing<span class="dots">...</span></div>
+    <input id="userInput" placeholder="Type your message..." />
+    <button onclick="sendMessage()">Send</button>
 
-    <div class="input-container">
-      <input type="text" id="user-input" placeholder="Type your message..." />
-      <button id="send-btn">🍕 Send</button>
-    </div>
+    <div id="chatBox"></div>
   </div>
 
   <script>
-    const chatBox = document.getElementById("chat-box");
-    const userInput = document.getElementById("user-input");
-    const sendBtn = document.getElementById("send-btn");
-    const typing = document.getElementById("typing");
-    const dropdown = document.getElementById("restaurant-dropdown");
-    const headerTitle = document.getElementById("header-title");
-    let selectedRestaurant = "";
+    const chatBox = document.getElementById("chatBox");
 
+    // 🧩 Load restaurant names dynamically
     async function loadRestaurants() {
       const res = await fetch("/restaurants");
       const data = await res.json();
-      data.restaurants.forEach(name => {
-        const option = document.createElement("option");
-        option.value = name;
-        option.textContent = name;
-        dropdown.appendChild(option);
+      const dropdown = document.getElementById("restaurant");
+      data.restaurants.forEach(r => {
+        const opt = document.createElement("option");
+        opt.value = r;
+        opt.textContent = r;
+        dropdown.appendChild(opt);
       });
     }
 
-    dropdown.addEventListener("change", () => {
-      selectedRestaurant = dropdown.value;
-      headerTitle.textContent = selectedRestaurant
-        ? `${selectedRestaurant} | Syntra AI`
-        : "Syntra AI – Restaurant Assistant";
+    // 🧩 Load chat history when selecting restaurant
+    async function loadHistory() {
+      const restaurant = document.getElementById("restaurant").value;
       chatBox.innerHTML = "";
-      if (selectedRestaurant) {
-        appendMessage("bot", `Welcome to ${selectedRestaurant}! How may I help you today?`);
-      }
-    });
+      if (!restaurant) return;
 
-    function appendMessage(sender, text) {
-      const msg = document.createElement("div");
-      msg.className = sender === "user" ? "user-msg" : "bot-msg";
-      msg.textContent = text;
-      chatBox.appendChild(msg);
+      const res = await fetch(`/history/${restaurant.replace(" ", "_")}`);
+      const data = await res.json();
+      if (data.history.length === 0) {
+        chatBox.innerHTML = "<p style='text-align:center;color:gray;'>No previous chats yet.</p>";
+        return;
+      }
+
+      data.history.forEach(msg => {
+        const p = document.createElement("p");
+        p.className = msg.role;
+        p.textContent = msg.message;
+        chatBox.appendChild(p);
+      });
       chatBox.scrollTop = chatBox.scrollHeight;
     }
 
+    // 🧩 Send new message
     async function sendMessage() {
-      const message = userInput.value.trim();
-      if (!message || !selectedRestaurant) return;
-      appendMessage("user", message);
-      userInput.value = "";
-      typing.classList.remove("hidden");
-      const res = await fetch("/ask", {
+      const restaurant = document.getElementById("restaurant").value;
+      const user_message = document.getElementById("userInput").value;
+      if (!restaurant || !user_message) return;
+
+      // Display user's message
+      chatBox.innerHTML += `<p class='user'>${user_message}</p>`;
+      document.getElementById("userInput").value = "";
+
+      // Show typing indicator
+      const typing = document.createElement("p");
+      typing.className = "typing";
+      typing.textContent = "Syntra is typing...";
+      chatBox.appendChild(typing);
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      // Fetch AI reply
+      const response = await fetch("/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message, restaurant: selectedRestaurant }),
+        body: JSON.stringify({ restaurant, message: user_message })
       });
-      const data = await res.json();
-      typing.classList.add("hidden");
-      typeEffect(data.response);
+      const data = await response.json();
+
+      // Remove typing indicator
+      typing.remove();
+
+      // Show bot reply
+      chatBox.innerHTML += `<p class='bot'>${data.response}</p>`;
+      chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    function typeEffect(text, i = 0) {
-      const msg = document.createElement("div");
-      msg.className = "bot-msg";
-      chatBox.appendChild(msg);
-      function typingAnimation() {
-        if (i < text.length) {
-          msg.textContent += text.charAt(i);
-          i++;
-          chatBox.scrollTop = chatBox.scrollHeight;
-          setTimeout(typingAnimation, 20);
-        }
-      }
-      typingAnimation();
-    }
-
-    sendBtn.onclick = sendMessage;
-    userInput.addEventListener("keypress", (e) => {
-      if (e.key === "Enter") sendMessage();
-    });
-
-    window.onload = () => {
-      loadRestaurants();
-    };
+    // Load restaurants when page opens
+    loadRestaurants();
   </script>
 </body>
 </html>
