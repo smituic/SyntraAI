@@ -39,26 +39,37 @@
     let selectedRestaurant = "";
     let recognizing = false;
 
+    // 🗣 Speak function (splits into small chunks)
+    function speakChunked(text) {
+      if (!("speechSynthesis" in window)) return;
+      const words = text.split(" ");
+      let chunk = "";
+      for (let i = 0; i < words.length; i++) {
+        chunk += words[i] + " ";
+        if (i % 10 === 0 && i !== 0) {
+          const utter = new SpeechSynthesisUtterance(chunk.trim());
+          utter.lang = "en-US";
+          utter.rate = 1;
+          utter.pitch = 1;
+          window.speechSynthesis.speak(utter);
+          chunk = "";
+        }
+      }
+      if (chunk.trim().length > 0) {
+        const utter = new SpeechSynthesisUtterance(chunk.trim());
+        utter.lang = "en-US";
+        utter.rate = 1;
+        utter.pitch = 1;
+        window.speechSynthesis.speak(utter);
+      }
+    }
+
     function appendMessage(sender, text) {
       const msg = document.createElement("div");
       msg.className = sender === "user" ? "user-msg" : "bot-msg";
       msg.textContent = text;
       chatBox.appendChild(msg);
       chatBox.scrollTop = chatBox.scrollHeight;
-
-      // 🗣 Speak the bot's message
-      if (sender === "bot") speakText(text);
-    }
-
-    // 🗣️ Text-to-Speech
-    function speakText(text) {
-      if (!("speechSynthesis" in window)) return;
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.lang = "en-US";
-      utter.rate = 1;
-      utter.pitch = 1;
-      window.speechSynthesis.cancel(); // stop previous speech
-      window.speechSynthesis.speak(utter);
     }
 
     async function loadRestaurants() {
@@ -117,18 +128,27 @@
       typeEffect(data.response);
     }
 
-    function typeEffect(text, i = 0) {
+    // 💬 Typing effect + chunked voice output
+    function typeEffect(text) {
       const msg = document.createElement("div");
       msg.className = "bot-msg";
       chatBox.appendChild(msg);
+      chatBox.scrollTop = chatBox.scrollHeight;
+      let buffer = "";
+      let i = 0;
       function typingAnimation() {
         if (i < text.length) {
           msg.textContent += text.charAt(i);
+          buffer += text.charAt(i);
+          if (text.charAt(i) === " " && buffer.split(" ").length > 10) {
+            speakChunked(buffer.trim());
+            buffer = "";
+          }
           i++;
           chatBox.scrollTop = chatBox.scrollHeight;
           setTimeout(typingAnimation, 20);
         } else {
-          speakText(text); // 🗣 speak after full message is shown
+          if (buffer.trim() !== "") speakChunked(buffer.trim());
         }
       }
       typingAnimation();
