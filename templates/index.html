@@ -65,14 +65,16 @@
       window.speechSynthesis.cancel(); // clear any queued voices
       const utter = new SpeechSynthesisUtterance(next);
       utter.lang = "en-US";
-      utter.rate = 2.0; // ⚡ faster voice
+      utter.rate = 1.55; // 🎯 natural, clear speed
       utter.pitch = 1.05;
       utter.voice = selectedVoice || null;
       speaking = true;
+
       utter.onend = () => {
         speaking = false;
-        processSpeechQueue();
+        setTimeout(processSpeechQueue, 100); // short pause between sentences
       };
+
       window.speechSynthesis.speak(utter);
     }
 
@@ -228,7 +230,7 @@
         recognizing = false;
         voiceBtn.style.backgroundColor = "#28a745";
         voiceBtn.textContent = "🎤";
-        messageFromVoice = true; // triggers voice reply
+        messageFromVoice = true;
         sendMessage();
       };
 
