@@ -62,22 +62,24 @@
     function processSpeechQueue() {
       if (speaking || speechQueue.length === 0) return;
       const next = speechQueue.shift();
-      window.speechSynthesis.cancel(); // clear old voices
+      window.speechSynthesis.cancel(); // clear any queued voices
       const utter = new SpeechSynthesisUtterance(next);
       utter.lang = "en-US";
-      utter.rate = 1.2; // 🎯 slower, natural conversational pace
+      utter.rate = 1.2; // 🎯 natural pace
       utter.pitch = 1.05;
       utter.voice = selectedVoice || null;
       speaking = true;
 
+      // ⏱ shorter pause between chunks
       utter.onend = () => {
         speaking = false;
-        setTimeout(processSpeechQueue, 120); // small pause between sentences
+        setTimeout(processSpeechQueue, 60);
       };
 
       window.speechSynthesis.speak(utter);
     }
 
+    // --- UI Helpers ---
     function appendMessage(sender, text) {
       const msg = document.createElement("div");
       msg.className = sender === "user" ? "user-msg" : "bot-msg";
@@ -142,7 +144,7 @@
       typeEffect(data.response);
     }
 
-    // Typing animation
+    // 💬 Typing animation (10-word chunks for smoother voice flow)
     function typeEffect(text) {
       const msg = document.createElement("div");
       msg.className = "bot-msg";
@@ -160,7 +162,8 @@
           buffer += ch;
           if (ch === " ") wordCount++;
 
-          if (messageFromVoice && (wordCount >= 5 || [".", "!", "?"].includes(ch))) {
+          // 🔧 increased chunk size (10 words) for smoother continuous speech
+          if (messageFromVoice && (wordCount >= 10 || [".", "!", "?"].includes(ch))) {
             enqueueSpeech(buffer);
             buffer = "";
             wordCount = 0;
@@ -190,6 +193,7 @@
       }
     });
 
+    // 🗑 Clear chat
     clearBtn.onclick = async () => {
       if (!selectedRestaurant) {
         alert("Please select a restaurant first.");
