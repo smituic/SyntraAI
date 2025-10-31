@@ -1,64 +1,87 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Syntra AI – Bacci Pizzeria Assistant</title>
-  <link rel="stylesheet" href="/static/style.css" />
+  <meta charset="UTF-8">
+  <title>Syntra AI – Restaurant Assistant</title>
+  <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  <h1>Syntra AI – Bacci Pizzeria Assistant</h1>
+  <div class="chat-container">
+    <h1>Syntra AI – Restaurant Assistant</h1>
+    <div class="tagline">🍕 Serving Chicago since 1996 • Powered by <b>Syntra AI</b></div>
 
-  <div id="chat-box" class="chat-box"></div>
+    <div id="chat-box" class="chat-box"></div>
+    <div id="typing" class="typing hidden">Syntra AI is typing<span class="dots">...</span></div>
 
-  <div class="input-area">
-    <input type="text" id="message-input" placeholder="Type your message…" autocomplete="off" />
-    <button id="send-btn">Send</button>
+    <div class="input-container">
+      <input type="text" id="user-input" placeholder="Type your message..." />
+      <button id="send-btn">🍕 Send</button>
+    </div>
   </div>
 
   <script>
     const chatBox = document.getElementById("chat-box");
-    const input = document.getElementById("message-input");
+    const userInput = document.getElementById("user-input");
     const sendBtn = document.getElementById("send-btn");
+    const typing = document.getElementById("typing");
 
-    function addMessage(role, text) {
-      const el = document.createElement("div");
-      el.className = "message " + role;
-      el.textContent = text;
-      chatBox.appendChild(el);
+    function appendMessage(sender, text) {
+      const msg = document.createElement("div");
+      msg.className = sender === "user" ? "user-msg" : "bot-msg";
+      msg.textContent = text;
+      chatBox.appendChild(msg);
       chatBox.scrollTop = chatBox.scrollHeight;
-      return el; // return the node so we can update it later
     }
 
     async function sendMessage() {
-      const text = input.value.trim();
-      if (!text) return;
+      const message = userInput.value.trim();
+      if (!message) return;
 
-      // Add user bubble
-      addMessage("user", text);
-      input.value = "";
+      appendMessage("user", message);
+      userInput.value = "";
 
-      // Add AI placeholder and keep a handle to it
-      const aiBubble = addMessage("ai", "…");
+      typing.classList.remove("hidden");
 
-      try {
-        const res = await fetch("/ask", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: text }),
-        });
-        const data = await res.json();
-        aiBubble.textContent = data.response ?? "Sorry, no response.";
-      } catch (err) {
-        aiBubble.textContent = "Network error. Please try again.";
-      }
+      const res = await fetch("/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message }),
+      });
 
-      chatBox.scrollTop = chatBox.scrollHeight;
+      const data = await res.json();
+
+      typing.classList.add("hidden");
+      typeEffect(data.response);
     }
 
-    sendBtn.addEventListener("click", sendMessage);
-    input.addEventListener("keydown", (e) => {
+    function typeEffect(text, i = 0) {
+      const msg = document.createElement("div");
+      msg.className = "bot-msg";
+      chatBox.appendChild(msg);
+
+      function typingAnimation() {
+        if (i < text.length) {
+          msg.textContent += text.charAt(i);
+          i++;
+          chatBox.scrollTop = chatBox.scrollHeight;
+          setTimeout(typingAnimation, 20);
+        }
+      }
+      typingAnimation();
+    }
+
+    sendBtn.onclick = sendMessage;
+    userInput.addEventListener("keypress", (e) => {
       if (e.key === "Enter") sendMessage();
     });
+
+    // Initial greeting
+    window.onload = () => {
+      appendMessage("bot", "Good morning! Welcome to Bacci Pizzeria 🍕 How may I assist you today?");
+      setTimeout(() => {
+        appendMessage("bot", "We have Pizzas, Pastas, Salads, Wings, and Desserts. Would you like to see today’s specials?");
+      }, 1200);
+    };
   </script>
 </body>
 </html>
