@@ -43,44 +43,49 @@ def format_name(name: str) -> str:
 
 
 def ask_syntra(user_text: str, restaurant_key: str, mode: str) -> str:
-    """LLM prompt for both Chat and OrderBot."""
+    """LLM prompt for both Chat and OrderBot with short-term memory."""
     tz = pytz.timezone("America/Chicago")
     now = datetime.now(tz).strftime("%A, %B %d, %Y at %I:%M %p %Z")
     restaurant_info = all_restaurants.get(restaurant_key, {})
 
+    # Select chat or order collection
+    collection_name = f"{restaurant_key}_orders" if mode == "order" else restaurant_key
+    collection = db[collection_name]
+
+    # Load last few messages (for memory)
+    history = list(collection.find({}, {"_id": 0}).sort("_id", -1).limit(6))
+    history.reverse()  # oldest first
+
+    # System instruction
     if mode == "chat":
-        prompt = f"""
+        system_prompt = f"""
 You are Syntra AI, a friendly assistant for the restaurant '{restaurant_key}'.
 
 RULES:
-- Only answer questions about this restaurant (menu, hours, pricing, address, policies, deals, contact info, or restaurant details).
+- Only answer questions about this restaurant (menu, hours, pricing, address, policies, or deals).
 - If unrelated (e.g., biology, random facts, etc.), politely say:
   "I can help with questions about this restaurant. Please ask about our menu, hours, location, or services."
+- Stay consistent with previous answers if asked again.
 
-Restaurant Data:
+Restaurant data:
 {json.dumps(restaurant_info, indent=2)}
 
 Current local time: {now}
-User: {user_text}
-AI:
 """
     else:
-        prompt = f"""
-You are Syntra OrderBot, a helpful ordering and reservation assistant for the restaurant '{restaurant_key}'.
-
-Your role is to help users place food orders or make table reservations. 
-Behave like a polite staff member taking an order at a restaurant.
+        system_prompt = f"""
+You are Syntra OrderBot for '{restaurant_key}'.
+You are currently in an ongoing conversation helping a customer with an order or reservation.
 
 RULES:
-- Always stay on topic (ordering or reservations).
-- Understand requests like "I want 2 large pizzas" or "Book a table for 4 at 7pm".
-- If details are missing, ask for them (item, size, quantity, pickup/delivery, time, name, or phone).
-- Confirm the full order or reservation clearly when enough info is provided.
-- ONLY say "I can help place an order..." if the question is completely unrelated (like a science question).
-- Keep responses short, friendly, and natural.
-- When user says "thank you" or "done", politely close the conversation.
+- Remember all previous details the user already gave (like party size, items, size, time, pickup/delivery).
+- Do NOT ask for details the user has already provided unless clarification is needed.
+- Confirm final orders clearly.
+- If the user says 'thank you', politely end the chat.
+- If the topic is unrelated to ordering, reply: "I can help with orders or reservations for this restaurant."
+- Stay friendly and natural.
 
-Restaurant Info:
+Restaurant info:
 {json.dumps(restaurant_info, indent=2)}
 
 Current local time: {now}
@@ -101,18 +106,22 @@ AI: Got it! Table for 4 reserved at 8 PM. Can I have a name for the booking?
 
 User: John.
 AI: Thank you, John. Your table for 4 is booked for 8 PM tonight. We look forward to serving you!
-
-Now handle this new user message naturally:
-User: {user_text}
-AI:
 """
+
+    # Prepare message list
+    messages = [{"role": "system", "content": system_prompt}]
+    for h in history:
+        if "role" in h and "message" in h:
+            messages.append({"role": h["role"], "content": h["message"]})
+    messages.append({"role": "user", "content": user_text})
 
     try:
         resp = client.chat.completions.create(
             model="gpt-3.5-turbo",
-            messages=[{"role": "system", "content": prompt}],
+            messages=messages,
+            temperature=0.7
         )
-        return resp.choices[0].message.content
+        return resp.choices[0].message.content.strip()
     except Exception as e:
         return f"Sorry, something went wrong: {e}"
 
