@@ -39,26 +39,14 @@
     let selectedRestaurant = "";
     let recognizing = false;
 
-    // 🗣 Speak function (faster, smoother voice)
+    // 🗣 Speak function (balanced speed)
     function speakChunked(text) {
       if (!("speechSynthesis" in window)) return;
-      const words = text.split(" ");
-      let chunk = "";
-      const speakNow = (txt) => {
-        const utter = new SpeechSynthesisUtterance(txt.trim());
-        utter.lang = "en-US";
-        utter.rate = 1.4;   // ⏩ faster speech
-        utter.pitch = 1.05; // small lift in tone
-        window.speechSynthesis.speak(utter);
-      };
-      for (let i = 0; i < words.length; i++) {
-        chunk += words[i] + " ";
-        if (i % 10 === 0 && i !== 0) {
-          speakNow(chunk);
-          chunk = "";
-        }
-      }
-      if (chunk.trim().length > 0) speakNow(chunk);
+      const utter = new SpeechSynthesisUtterance(text.trim());
+      utter.lang = "en-US";
+      utter.rate = 1.2;   // slightly slower to match typing
+      utter.pitch = 1.05;
+      window.speechSynthesis.speak(utter);
     }
 
     function appendMessage(sender, text) {
@@ -125,29 +113,34 @@
       typeEffect(data.response);
     }
 
-    // 💬 Typing effect + chunked voice output
+    // 💬 Typing effect perfectly synced with voice
     function typeEffect(text) {
       const msg = document.createElement("div");
       msg.className = "bot-msg";
       chatBox.appendChild(msg);
       chatBox.scrollTop = chatBox.scrollHeight;
+
       let buffer = "";
       let i = 0;
+
       function typingAnimation() {
         if (i < text.length) {
           msg.textContent += text.charAt(i);
           buffer += text.charAt(i);
-          if (text.charAt(i) === " " && buffer.split(" ").length > 10) {
-            speakChunked(buffer.trim());
+
+          if (buffer.split(" ").length > 10 || text.charAt(i) === ".") {
+            speakChunked(buffer);
             buffer = "";
           }
+
           i++;
           chatBox.scrollTop = chatBox.scrollHeight;
-          setTimeout(typingAnimation, 15); // faster typing
+          setTimeout(typingAnimation, 30); // slower typing for realism
         } else {
-          if (buffer.trim() !== "") speakChunked(buffer.trim());
+          if (buffer.trim() !== "") speakChunked(buffer);
         }
       }
+
       typingAnimation();
     }
 
@@ -156,7 +149,7 @@
       if (e.key === "Enter") sendMessage();
     });
 
-    // 🗑 Clear chat button
+    // 🗑 Clear chat
     clearBtn.onclick = async () => {
       if (!selectedRestaurant) {
         alert("Please select a restaurant first.");
@@ -169,7 +162,7 @@
       appendMessage("bot", `Chat history cleared for ${selectedRestaurant}.`);
     };
 
-    // 🎤 Voice input feature
+    // 🎤 Voice input
     if ("webkitSpeechRecognition" in window) {
       const recognition = new webkitSpeechRecognition();
       recognition.continuous = false;
