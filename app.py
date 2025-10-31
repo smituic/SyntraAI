@@ -2,7 +2,6 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import os
 import json
@@ -25,13 +24,6 @@ db = mongo_client["SyntraAI"]
 
 # FastAPI setup
 app = FastAPI()
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
@@ -41,7 +33,6 @@ all_restaurants = load_all_restaurant_data()
 # Function to convert file-style names to display names
 def format_name(name):
     return name.replace("_", " ").title()
-
 
 def ask_syntra(user_text: str, restaurant_key: str) -> str:
     tz = pytz.timezone("America/Chicago")
@@ -79,6 +70,7 @@ async def home(request: Request):
 
 @app.get("/restaurants")
 async def get_restaurants():
+    # Show clean display names in dropdown
     restaurant_names = [format_name(name) for name in all_restaurants.keys()]
     return JSONResponse({"restaurants": restaurant_names})
 
@@ -98,20 +90,5 @@ async def ask(request: Request):
     key_map = {format_name(name): name for name in all_restaurants.keys()}
     restaurant_key = key_map.get(restaurant_display, restaurant_display)
 
-    # 🧠 Ask Syntra
     answer = ask_syntra(msg, restaurant_key)
-
-    # 🗂 Save chat to MongoDB (separate collection per restaurant)
-    collection = db[restaurant_key]
-    collection.insert_one({"role": "user", "message": msg})
-    collection.insert_one({"role": "bot", "message": answer})
-
     return JSONResponse({"response": answer})
-
-
-@app.get("/history/{restaurant_name}")
-async def get_chat_history(restaurant_name: str):
-    # Optional endpoint to view saved chat history
-    collection = db[restaurant_name]
-    chats = list(collection.find({}, {"_id": 0}))
-    return JSONResponse({"history": chats})
