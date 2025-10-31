@@ -2,17 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Syntra AI – Restaurant Assistant</title>
+  <title>Syntra AI – Business Assistant</title>
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
   <div class="chat-container">
-    <h1 id="header-title">Syntra AI – Restaurant Assistant</h1>
-    <div class="tagline">🍽 Select a restaurant to begin your chat</div>
+    <h1 id="header-title">Syntra AI – Business Assistant</h1>
+    <div class="tagline">🍽 Select a restaurant and mode to begin your chat</div>
 
     <div class="restaurant-select">
       <select id="restaurant-dropdown">
         <option value="">-- Choose a restaurant --</option>
+      </select>
+      <select id="mode-dropdown" style="margin-left:10px; padding:8px; border-radius:6px; border:1px solid #ccc; color:#12368c; cursor:pointer;">
+        <option value="chat">💬 Chat Mode</option>
+        <option value="order">🍽 Order Mode</option>
       </select>
     </div>
 
@@ -24,30 +28,52 @@
       <button id="send-btn">🍕 Send</button>
       <button id="voice-btn" style="margin-left:10px;background-color:#28a745;color:white;border:none;border-radius:5px;padding:10px 15px;cursor:pointer;">🎤</button>
       <button id="clear-btn" style="margin-left:10px;background-color:#e74c3c;color:white;border:none;border-radius:5px;padding:10px 15px;cursor:pointer;">🗑 Clear</button>
+      <button id="clear-orders-btn" style="margin-left:10px;background-color:#c0392b;color:white;border:none;border-radius:5px;padding:10px 15px;cursor:pointer;">🧹 Clear Orders</button>
     </div>
   </div>
 
   <script>
+    // ---------- DOM refs ----------
     const chatBox = document.getElementById("chat-box");
     const userInput = document.getElementById("user-input");
     const sendBtn = document.getElementById("send-btn");
     const clearBtn = document.getElementById("clear-btn");
+    const clearOrdersBtn = document.getElementById("clear-orders-btn");
     const voiceBtn = document.getElementById("voice-btn");
     const typing = document.getElementById("typing");
     const dropdown = document.getElementById("restaurant-dropdown");
+    const modeDropdown = document.getElementById("mode-dropdown");
     const headerTitle = document.getElementById("header-title");
+
+    // ---------- State ----------
     let selectedRestaurant = "";
+    let selectedRestaurantKey = ""; // underscore version used by backend history routes
     let recognizing = false;
     let messageFromVoice = false;
+    let mode = "chat";
 
-    // 🎙️ Voice setup
+    // ---------- Helpers ----------
+    function uiFormatToKey(name) {
+      // "Bacci Pizza" -> "Bacci_Pizza"
+      return (name || "").replaceAll(" ", "_");
+    }
+
+    function appendMessage(sender, text) {
+      const msg = document.createElement("div");
+      msg.className = sender === "user" ? "user-msg" : "bot-msg";
+      msg.textContent = text;
+      chatBox.appendChild(msg);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // ---------- Voice: output (TTS) tuned for natural flow ----------
     let selectedVoice = null;
     window.speechSynthesis.onvoiceschanged = () => {
       const voices = window.speechSynthesis.getVoices();
       selectedVoice =
         voices.find(v => v.name.includes("Google US English")) ||
         voices.find(v => v.name.includes("Microsoft Aria")) ||
-        voices[0];
+        voices[0] || null;
     };
 
     const speechQueue = [];
@@ -62,15 +88,16 @@
     function processSpeechQueue() {
       if (speaking || speechQueue.length === 0) return;
       const next = speechQueue.shift();
-      window.speechSynthesis.cancel(); // clear any queued voices
+      // ensure no old queued items linger:
+      window.speechSynthesis.cancel();
       const utter = new SpeechSynthesisUtterance(next);
       utter.lang = "en-US";
-      utter.rate = 1.2; // 🎯 natural pace
+      utter.rate = 1.2;       // natural, slightly calm
       utter.pitch = 1.05;
       utter.voice = selectedVoice || null;
       speaking = true;
 
-      // ⏱ shorter pause between chunks
+      // shorter pause between bursts:
       utter.onend = () => {
         speaking = false;
         setTimeout(processSpeechQueue, 60);
@@ -79,15 +106,18 @@
       window.speechSynthesis.speak(utter);
     }
 
-    // --- UI Helpers ---
-    function appendMessage(sender, text) {
-      const msg = document.createElement("div");
-      msg.className = sender === "user" ? "user-msg" : "bot-msg";
-      msg.textContent = text;
-      chatBox.appendChild(msg);
-      chatBox.scrollTop = chatBox.scrollHeight;
+    // ---------- Voice: input (Speech-to-Text) ----------
+    let recognition = null;
+    if ("webkitSpeechRecognition" in window) {
+      recognition = new webkitSpeechRecognition();
+      recognition.continuous = false;
+      recognition.lang = "en-US";
+    } else {
+      voiceBtn.disabled = true;
+      voiceBtn.title = "Voice recognition not supported in this browser.";
     }
 
+    // ---------- Load restaurants ----------
     async function loadRestaurants() {
       const res = await fetch("/restaurants");
       const data = await res.json();
@@ -98,38 +128,92 @@
         option.textContent = name.trim();
         dropdown.appendChild(option);
       });
-      return data.restaurants;
+
+      // restore last selections
+      const lastRestaurant = localStorage.getItem("lastRestaurant");
+      const lastMode = localStorage.getItem("lastMode");
+      if (lastRestaurant && data.restaurants.includes(lastRestaurant)) {
+        selectedRestaurant = lastRestaurant;
+        selectedRestaurantKey = uiFormatToKey(selectedRestaurant);
+        dropdown.value = lastRestaurant;
+        headerTitle.textContent = `${selectedRestaurant} | Syntra AI`;
+        await loadHistoryForCurrentMode(); // default to chat history on load
+      }
+      if (lastMode && (lastMode === "chat" || lastMode === "order")) {
+        mode = lastMode;
+        modeDropdown.value = mode;
+      }
     }
 
-    async function loadHistory(restaurantName) {
-      if (!restaurantName) return;
+    // ---------- History loaders ----------
+    async function loadChatHistory() {
       chatBox.innerHTML = "";
-      const res = await fetch(`/history/${restaurantName.replaceAll(" ", "_")}`);
+      const res = await fetch(`/history/${selectedRestaurantKey}`);
       const data = await res.json();
       if (data.history?.length) {
         data.history.forEach(m =>
           appendMessage(m.role === "user" ? "user" : "bot", m.message)
         );
       } else {
-        appendMessage("bot", `Welcome to ${restaurantName}! How may I help you today?`);
+        appendMessage("bot", `Welcome to ${selectedRestaurant}! How may I help you today?`);
       }
     }
 
+    async function loadOrderHistory() {
+      chatBox.innerHTML = "";
+      const res = await fetch(`/history_orders/${selectedRestaurantKey}`);
+      const data = await res.json();
+      if (data.history?.length) {
+        data.history.forEach(m =>
+          appendMessage(m.role === "user" ? "user" : "bot", m.message)
+        );
+      } else {
+        appendMessage("bot", `🛒 Order mode is active for ${selectedRestaurant}. Start your order when ready!`);
+      }
+    }
+
+    async function loadHistoryForCurrentMode() {
+      if (!selectedRestaurantKey) return;
+      if (mode === "order") {
+        await loadOrderHistory();
+      } else {
+        await loadChatHistory();
+      }
+    }
+
+    // ---------- Dropdown handlers ----------
     dropdown.addEventListener("change", async () => {
       selectedRestaurant = dropdown.value;
+      selectedRestaurantKey = uiFormatToKey(selectedRestaurant);
       localStorage.setItem("lastRestaurant", selectedRestaurant);
-      chatBox.innerHTML = "";
-      if (!selectedRestaurant) {
-        headerTitle.textContent = "Syntra AI – Restaurant Assistant";
-        return;
-      }
-      headerTitle.textContent = `${selectedRestaurant} | Syntra AI`;
-      await loadHistory(selectedRestaurant);
+
+      headerTitle.textContent = selectedRestaurant
+        ? `${selectedRestaurant} | Syntra AI`
+        : "Syntra AI – Business Assistant";
+
+      await loadHistoryForCurrentMode();
     });
 
+    modeDropdown.addEventListener("change", async () => {
+      mode = modeDropdown.value;
+      localStorage.setItem("lastMode", mode);
+      if (!selectedRestaurant) {
+        appendMessage("bot", mode === "order"
+          ? "🛒 Order mode selected. Choose a restaurant to begin."
+          : "💬 Chat mode selected. Choose a restaurant to begin.");
+        return;
+      }
+      await loadHistoryForCurrentMode();
+      appendMessage("bot", mode === "order"
+        ? "🛒 Order mode activated. You can place orders or book a table."
+        : "💬 Chat mode activated. Ask anything about the restaurant!");
+    });
+
+    // ---------- Send message ----------
     async function sendMessage() {
       const message = userInput.value.trim();
       if (!message || !selectedRestaurant) return;
+
       appendMessage("user", message);
       userInput.value = "";
       typing.classList.remove("hidden");
@@ -137,14 +221,18 @@
       const res = await fetch("/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message, restaurant: selectedRestaurant }),
+        body: JSON.stringify({
+          message,
+          restaurant: selectedRestaurant,
+          mode
+        }),
       });
       const data = await res.json();
       typing.classList.add("hidden");
       typeEffect(data.response);
     }
 
-    // 💬 Typing animation (10-word chunks for smoother voice flow)
+    // ---------- Typing + (optional) voice out ONLY if message came from mic ----------
     function typeEffect(text) {
       const msg = document.createElement("div");
       msg.className = "bot-msg";
@@ -162,7 +250,7 @@
           buffer += ch;
           if (ch === " ") wordCount++;
 
-          // 🔧 increased chunk size (10 words) for smoother continuous speech
+          // smoother speech: ~10 words per chunk OR punctuation
           if (messageFromVoice && (wordCount >= 10 || [".", "!", "?"].includes(ch))) {
             enqueueSpeech(buffer);
             buffer = "";
@@ -174,15 +262,16 @@
           setTimeout(typingAnimation, 22);
         } else {
           if (messageFromVoice && buffer.trim() !== "") enqueueSpeech(buffer);
-          messageFromVoice = false;
+          messageFromVoice = false; // reset
         }
       }
 
       typingAnimation();
     }
 
+    // ---------- Button & keyboard handlers ----------
     sendBtn.onclick = () => {
-      messageFromVoice = false;
+      messageFromVoice = false; // typed => no voice out
       sendMessage();
     };
 
@@ -193,68 +282,70 @@
       }
     });
 
-    // 🗑 Clear chat
-    clearBtn.onclick = async () => {
-      if (!selectedRestaurant) {
-        alert("Please select a restaurant first.");
-        return;
+    // Voice button toggles recognition
+    voiceBtn.onclick = () => {
+      if (!recognition) return;
+      if (recognizing) {
+        recognition.stop();
+        recognizing = false;
+        voiceBtn.style.backgroundColor = "#28a745";
+        voiceBtn.textContent = "🎤";
+      } else {
+        recognition.start();
+        recognizing = true;
+        voiceBtn.style.backgroundColor = "#1e7e34";
+        voiceBtn.textContent = "🛑";
       }
-      const confirmClear = confirm(`Clear chat history for ${selectedRestaurant}?`);
-      if (!confirmClear) return;
-      chatBox.innerHTML = "";
-      await fetch(`/clear/${selectedRestaurant.replaceAll(" ", "_")}`, { method: "DELETE" });
-      appendMessage("bot", `Chat history cleared for ${selectedRestaurant}.`);
     };
 
-    // 🎤 Voice input
-    if ("webkitSpeechRecognition" in window) {
-      const recognition = new webkitSpeechRecognition();
-      recognition.continuous = false;
-      recognition.lang = "en-US";
-
-      voiceBtn.onclick = () => {
-        if (recognizing) {
-          recognition.stop();
-          recognizing = false;
-          voiceBtn.style.backgroundColor = "#28a745";
-          voiceBtn.textContent = "🎤";
-        } else {
-          recognition.start();
-          recognizing = true;
-          voiceBtn.style.backgroundColor = "#1e7e34";
-          voiceBtn.textContent = "🛑";
-        }
-      };
-
+    if (recognition) {
       recognition.onresult = event => {
         const transcript = event.results[0][0].transcript.trim();
         userInput.value = transcript;
         recognizing = false;
         voiceBtn.style.backgroundColor = "#28a745";
         voiceBtn.textContent = "🎤";
-        messageFromVoice = true;
+        messageFromVoice = true; // mic used => speak back
         sendMessage();
       };
-
       recognition.onerror = () => {
         recognizing = false;
         voiceBtn.style.backgroundColor = "#28a745";
         voiceBtn.textContent = "🎤";
         alert("Voice recognition error. Please try again.");
       };
-    } else {
-      voiceBtn.disabled = true;
-      voiceBtn.title = "Voice recognition not supported in this browser.";
     }
 
+    // ---------- Clear buttons ----------
+    clearBtn.onclick = async () => {
+      if (!selectedRestaurantKey) {
+        alert("Please select a restaurant first.");
+        return;
+      }
+      const ok = confirm(`Clear CHAT history for ${selectedRestaurant}?`);
+      if (!ok) return;
+      await fetch(`/clear/${selectedRestaurantKey}`, { method: "DELETE" });
+      chatBox.innerHTML = "";
+      appendMessage("bot", `Chat history cleared for ${selectedRestaurant}.`);
+    };
+
+    clearOrdersBtn.onclick = async () => {
+      if (!selectedRestaurantKey) {
+        alert("Please select a restaurant first.");
+        return;
+      }
+      const ok = confirm(`Clear ORDER history for ${selectedRestaurant}?`);
+      if (!ok) return;
+      await fetch(`/clear_orders/${selectedRestaurantKey}`, { method: "DELETE" });
+      chatBox.innerHTML = "";
+      appendMessage("bot", `Order history cleared for ${selectedRestaurant}.`);
+    };
+
+    // ---------- Init ----------
     window.onload = async () => {
-      const restaurants = await loadRestaurants();
-      const lastRestaurant = localStorage.getItem("lastRestaurant");
-      if (lastRestaurant && restaurants.includes(lastRestaurant)) {
-        selectedRestaurant = lastRestaurant;
-        dropdown.value = lastRestaurant;
-        headerTitle.textContent = `${selectedRestaurant} | Syntra AI`;
-        await loadHistory(selectedRestaurant);
+      await loadRestaurants();
+      if (!selectedRestaurant) {
+        appendMessage("bot", "Welcome! Pick a restaurant to get started.");
       }
     };
   </script>
