@@ -30,16 +30,20 @@ templates = Jinja2Templates(directory="templates")
 # Load all restaurant data
 all_restaurants = load_all_restaurant_data()
 
-def ask_syntra(user_text: str, restaurant_name: str) -> str:
+# Function to convert file-style names to display names
+def format_name(name):
+    return name.replace("_", " ").title()
+
+def ask_syntra(user_text: str, restaurant_key: str) -> str:
     tz = pytz.timezone("America/Chicago")
     now = datetime.now(tz).strftime("%A, %B %d, %Y at %I:%M %p %Z")
     time_note = f"The current local date and time in Chicago is {now}."
 
-    restaurant_info = all_restaurants.get(restaurant_name, {})
+    restaurant_info = all_restaurants.get(restaurant_key, {})
     prompt = f"""
 You are Syntra AI, a friendly restaurant assistant.
 
-Here is information about the restaurant '{restaurant_name}':
+Here is information about the restaurant '{restaurant_key}':
 {json.dumps(restaurant_info, indent=2)}
 
 Answer the user's question clearly and professionally.
@@ -66,19 +70,25 @@ async def home(request: Request):
 
 @app.get("/restaurants")
 async def get_restaurants():
-    return JSONResponse({"restaurants": list(all_restaurants.keys())})
+    # Show clean display names in dropdown
+    restaurant_names = [format_name(name) for name in all_restaurants.keys()]
+    return JSONResponse({"restaurants": restaurant_names})
 
 
 @app.post("/ask")
 async def ask(request: Request):
     data = await request.json()
     msg = data.get("message", "").strip()
-    restaurant = data.get("restaurant", "").strip()
+    restaurant_display = data.get("restaurant", "").strip()
 
     if not msg:
         return JSONResponse({"response": "Please type a message."})
-    if not restaurant:
+    if not restaurant_display:
         return JSONResponse({"response": "Please select a restaurant first."})
 
-    answer = ask_syntra(msg, restaurant)
+    # Match display name (e.g., 'Bacci Pizza') back to file key
+    key_map = {format_name(name): name for name in all_restaurants.keys()}
+    restaurant_key = key_map.get(restaurant_display, restaurant_display)
+
+    answer = ask_syntra(msg, restaurant_key)
     return JSONResponse({"response": answer})
