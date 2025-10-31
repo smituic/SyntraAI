@@ -38,8 +38,9 @@
     const headerTitle = document.getElementById("header-title");
     let selectedRestaurant = "";
     let recognizing = false;
+    let messageFromVoice = false; // 🎙️ track if user used voice input
 
-    // 🎙 Smooth speech queue (never skips, continuous)
+    // 🎙 Smooth speech queue (only when needed)
     const speechQueue = [];
     let speaking = false;
 
@@ -57,12 +58,10 @@
       utter.rate = 1.35;
       utter.pitch = 1.05;
       speaking = true;
-
       utter.onend = () => {
         speaking = false;
         processSpeechQueue();
       };
-
       window.speechSynthesis.speak(utter);
     }
 
@@ -130,7 +129,7 @@
       typeEffect(data.response);
     }
 
-    // 💬 Typing animation + speech queue
+    // 💬 Typing animation (only speak if messageFromVoice = true)
     function typeEffect(text) {
       const msg = document.createElement("div");
       msg.className = "bot-msg";
@@ -148,8 +147,7 @@
           buffer += ch;
           if (ch === " ") wordCount++;
 
-          // Enqueue speech smoothly every ~5 words or punctuation
-          if (wordCount >= 5 || [".", "!", "?"].includes(ch)) {
+          if (messageFromVoice && (wordCount >= 5 || [".", "!", "?"].includes(ch))) {
             enqueueSpeech(buffer);
             buffer = "";
             wordCount = 0;
@@ -157,18 +155,26 @@
 
           i++;
           chatBox.scrollTop = chatBox.scrollHeight;
-          setTimeout(typingAnimation, 22); // perfect sync with voice
+          setTimeout(typingAnimation, 22);
         } else {
-          if (buffer.trim() !== "") enqueueSpeech(buffer);
+          if (messageFromVoice && buffer.trim() !== "") enqueueSpeech(buffer);
+          messageFromVoice = false; // reset after each voice conversation
         }
       }
 
       typingAnimation();
     }
 
-    sendBtn.onclick = sendMessage;
+    sendBtn.onclick = () => {
+      messageFromVoice = false; // typed manually
+      sendMessage();
+    };
+
     userInput.addEventListener("keypress", e => {
-      if (e.key === "Enter") sendMessage();
+      if (e.key === "Enter") {
+        messageFromVoice = false;
+        sendMessage();
+      }
     });
 
     // 🗑 Clear chat
@@ -184,7 +190,7 @@
       appendMessage("bot", `Chat history cleared for ${selectedRestaurant}.`);
     };
 
-    // 🎤 Voice input
+    // 🎤 Voice input — enables speaking response
     if ("webkitSpeechRecognition" in window) {
       const recognition = new webkitSpeechRecognition();
       recognition.continuous = false;
@@ -210,6 +216,7 @@
         recognizing = false;
         voiceBtn.style.backgroundColor = "#28a745";
         voiceBtn.textContent = "🎤";
+        messageFromVoice = true; // only this triggers voice reply
         sendMessage();
       };
 
