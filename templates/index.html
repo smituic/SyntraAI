@@ -45,6 +45,20 @@
       msg.textContent = text;
       chatBox.appendChild(msg);
       chatBox.scrollTop = chatBox.scrollHeight;
+
+      // 🗣 Speak the bot's message
+      if (sender === "bot") speakText(text);
+    }
+
+    // 🗣️ Text-to-Speech
+    function speakText(text) {
+      if (!("speechSynthesis" in window)) return;
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = "en-US";
+      utter.rate = 1;
+      utter.pitch = 1;
+      window.speechSynthesis.cancel(); // stop previous speech
+      window.speechSynthesis.speak(utter);
     }
 
     async function loadRestaurants() {
@@ -92,6 +106,7 @@
       appendMessage("user", message);
       userInput.value = "";
       typing.classList.remove("hidden");
+
       const res = await fetch("/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -112,6 +127,8 @@
           i++;
           chatBox.scrollTop = chatBox.scrollHeight;
           setTimeout(typingAnimation, 20);
+        } else {
+          speakText(text); // 🗣 speak after full message is shown
         }
       }
       typingAnimation();
