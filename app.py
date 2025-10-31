@@ -27,10 +27,9 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-# Load all restaurant data
+# Load restaurant data
 all_restaurants = load_all_restaurant_data()
 
-# Function to convert file-style names to display names
 def format_name(name):
     return name.replace("_", " ").title()
 
@@ -38,8 +37,8 @@ def ask_syntra(user_text: str, restaurant_key: str) -> str:
     tz = pytz.timezone("America/Chicago")
     now = datetime.now(tz).strftime("%A, %B %d, %Y at %I:%M %p %Z")
     time_note = f"The current local date and time in Chicago is {now}."
-
     restaurant_info = all_restaurants.get(restaurant_key, {})
+
     prompt = f"""
 You are Syntra AI, a friendly restaurant assistant.
 
@@ -62,18 +61,20 @@ AI:
     except Exception as e:
         return f"Sorry, something went wrong: {e}"
 
-
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
-
 @app.get("/restaurants")
 async def get_restaurants():
-    # Show clean display names in dropdown
     restaurant_names = [format_name(name) for name in all_restaurants.keys()]
     return JSONResponse({"restaurants": restaurant_names})
 
+@app.get("/history/{restaurant_name}")
+async def get_chat_history(restaurant_name: str):
+    collection = db[restaurant_name]
+    chats = list(collection.find({}, {"_id": 0}))
+    return JSONResponse({"history": chats})
 
 @app.post("/ask")
 async def ask(request: Request):
@@ -86,9 +87,14 @@ async def ask(request: Request):
     if not restaurant_display:
         return JSONResponse({"response": "Please select a restaurant first."})
 
-    # Match display name (e.g., 'Bacci Pizza') back to file key
     key_map = {format_name(name): name for name in all_restaurants.keys()}
     restaurant_key = key_map.get(restaurant_display, restaurant_display)
 
     answer = ask_syntra(msg, restaurant_key)
+
+    # Save both user and bot messages
+    collection = db[restaurant_key]
+    collection.insert_one({"role": "user", "message": msg})
+    collection.insert_one({"role": "bot", "message": answer})
+
     return JSONResponse({"response": answer})
