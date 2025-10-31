@@ -11,104 +11,88 @@ import pytz
 from pymongo import MongoClient
 from helper import load_all_restaurant_data
 
-# Load environment variables
+# ------------------- LOAD ENV VARIABLES -------------------
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 MONGO_URI = os.getenv("MONGO_URI")
 
-# Initialize OpenAI and MongoDB
+# ------------------- INITIALIZE OPENAI & MONGODB -------------------
 client = OpenAI(api_key=OPENAI_API_KEY)
 mongo_client = MongoClient(MONGO_URI)
 db = mongo_client["SyntraAI"]
 
-# FastAPI setup
+# ------------------- FASTAPI SETUP -------------------
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-# Load all restaurant data
+# ------------------- LOAD RESTAURANT DATA -------------------
 all_restaurants = load_all_restaurant_data()
 
-# Convert file-style keys to display names
-def format_name(name: str) -> str:
+# ------------------- HELPER FUNCTION -------------------
+def format_name(name):
+    """Convert file-style names to display names"""
     return name.replace("_", " ").title()
 
-# ---- NEW: fetch recent chat history (addition) ----
-def fetch_recent_history(restaurant_key: str, limit: int = 10):
-    """
-    Returns a list of dicts like {"role": "user"|"bot", "message": "..."} in chronological order.
-    Uses $natural to respect insertion order even if old docs don't have timestamps.
-    """
-    coll = db[restaurant_key]
-    docs = list(coll.find({}, {"_id": 0, "role": 1, "message": 1})
-                    .sort([("$natural", -1)]).limit(limit))
-    docs.reverse()  # oldest -> newest
-    return docs
-
-# Build the model messages with system prompt + history + current user message
-def build_messages(user_text: str, restaurant_key: str):
+# ------------------- AI RESPONSE FUNCTION (with context memory) -------------------
+def ask_syntra(user_text: str, restaurant_key: str) -> str:
     tz = pytz.timezone("America/Chicago")
     now = datetime.now(tz).strftime("%A, %B %d, %Y at %I:%M %p %Z")
     time_note = f"The current local date and time in Chicago is {now}."
 
     restaurant_info = all_restaurants.get(restaurant_key, {})
+    collection = db[restaurant_key]
 
-    system_prompt = f"""
-You are Syntra AI, a friendly restaurant assistant.
+    # 🧠 Load last 6 messages for context (3 user + 3 bot typically)
+    history = list(collection.find({}, {"_id": 0}).sort("_id", -1).limit(6))
+    history.reverse()  # chronological order
 
-Here is information about the restaurant '{restaurant_key}':
+    # Create conversation context
+    conversation = ""
+    for h in history:
+        role = "User" if h["role"] == "user" else "AI"
+        conversation += f"{role}: {h['message']}\n"
+
+    prompt = f"""
+You are Syntra AI, a friendly and professional restaurant assistant.
+
+Restaurant: '{restaurant_key}'
+Information:
 {json.dumps(restaurant_info, indent=2)}
 
-Answer the user's question clearly and professionally.
-If the question is not related to this restaurant, politely mention that.
+Conversation so far:
+{conversation}
+
+Now continue the chat naturally.
+If the question is unrelated to the restaurant, politely mention that.
 
 {time_note}
-""".strip()
+User: {user_text}
+AI:
+"""
 
-    messages = [{"role": "system", "content": system_prompt}]
-
-    # ---- NEW: include recent history (addition) ----
-    history = fetch_recent_history(restaurant_key, limit=10)  # ~ last 10 messages
-    for h in history:
-        role = "assistant" if h.get("role") == "bot" else "user"
-        content = h.get("message", "")
-        if content:
-            messages.append({"role": role, "content": content})
-
-    # current user turn
-    messages.append({"role": "user", "content": user_text})
-    return messages
-
-def ask_syntra(user_text: str, restaurant_key: str) -> str:
     try:
-        messages = build_messages(user_text, restaurant_key)
         resp = client.chat.completions.create(
             model="gpt-3.5-turbo",
-            messages=messages,
+            messages=[{"role": "system", "content": prompt}],
         )
         return resp.choices[0].message.content
     except Exception as e:
         return f"Sorry, something went wrong: {e}"
 
-# Routes
+# ------------------- ROUTES -------------------
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 @app.get("/restaurants")
 async def get_restaurants():
-    names = [format_name(name) for name in all_restaurants.keys()]
-    return JSONResponse({"restaurants": names})
-
-# Chat history API (unchanged)
-@app.get("/history/{restaurant_name}")
-async def get_chat_history(restaurant_name: str):
-    collection = db[restaurant_name]
-    chats = list(collection.find({}, {"_id": 0}))
-    return JSONResponse({"history": chats})
+    restaurant_names = [format_name(name) for name in all_restaurants.keys()]
+    return JSONResponse({"restaurants": restaurant_names})
 
 @app.post("/ask")
 async def ask(request: Request):
+    """Handles user messages, generates AI responses, and saves to MongoDB"""
     data = await request.json()
     msg = data.get("message", "").strip()
     restaurant_display = data.get("restaurant", "").strip()
@@ -118,17 +102,28 @@ async def ask(request: Request):
     if not restaurant_display:
         return JSONResponse({"response": "Please select a restaurant first."})
 
-    # Map display name back to key
     key_map = {format_name(name): name for name in all_restaurants.keys()}
     restaurant_key = key_map.get(restaurant_display, restaurant_display)
 
-    # Get model reply (now with memory)
+    # Generate response
     answer = ask_syntra(msg, restaurant_key)
 
-    # Save both user and bot messages (addition: include timestamp)
-    collection = db[restaurant_key]
-    now_utc = datetime.utcnow()
-    collection.insert_one({"role": "user", "message": msg, "ts": now_utc})
-    collection.insert_one({"role": "bot", "message": answer, "ts": now_utc})
+    # Save chat in MongoDB
+    try:
+        collection = db[restaurant_key]
+        collection.insert_one({"role": "user", "message": msg})
+        collection.insert_one({"role": "bot", "message": answer})
+    except Exception as e:
+        print("MongoDB Error:", e)
 
     return JSONResponse({"response": answer})
+
+@app.get("/history/{restaurant_name}")
+async def get_chat_history(restaurant_name: str):
+    """Fetch previous chat history for a restaurant"""
+    try:
+        collection = db[restaurant_name]
+        chats = list(collection.find({}, {"_id": 0}))
+        return JSONResponse({"history": chats})
+    except Exception as e:
+        return JSONResponse({"history": [], "error": str(e)})
