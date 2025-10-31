@@ -22,6 +22,7 @@
     <div class="input-container">
       <input type="text" id="user-input" placeholder="Type your message..." />
       <button id="send-btn">🍕 Send</button>
+      <button id="voice-btn" style="margin-left:10px;background-color:#28a745;color:white;border:none;border-radius:5px;padding:10px 15px;cursor:pointer;">🎤</button>
       <button id="clear-btn" style="margin-left:10px;background-color:#e74c3c;color:white;border:none;border-radius:5px;padding:10px 15px;cursor:pointer;">🗑 Clear</button>
     </div>
   </div>
@@ -31,10 +32,12 @@
     const userInput = document.getElementById("user-input");
     const sendBtn = document.getElementById("send-btn");
     const clearBtn = document.getElementById("clear-btn");
+    const voiceBtn = document.getElementById("voice-btn");
     const typing = document.getElementById("typing");
     const dropdown = document.getElementById("restaurant-dropdown");
     const headerTitle = document.getElementById("header-title");
     let selectedRestaurant = "";
+    let recognizing = false;
 
     function appendMessage(sender, text) {
       const msg = document.createElement("div");
@@ -86,11 +89,9 @@
     async function sendMessage() {
       const message = userInput.value.trim();
       if (!message || !selectedRestaurant) return;
-
       appendMessage("user", message);
       userInput.value = "";
       typing.classList.remove("hidden");
-
       const res = await fetch("/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -133,6 +134,46 @@
       await fetch(`/clear/${selectedRestaurant.replaceAll(" ", "_")}`, { method: "DELETE" });
       appendMessage("bot", `Chat history cleared for ${selectedRestaurant}.`);
     };
+
+    // 🎤 Voice input feature
+    if ("webkitSpeechRecognition" in window) {
+      const recognition = new webkitSpeechRecognition();
+      recognition.continuous = false;
+      recognition.lang = "en-US";
+
+      voiceBtn.onclick = () => {
+        if (recognizing) {
+          recognition.stop();
+          recognizing = false;
+          voiceBtn.style.backgroundColor = "#28a745";
+          voiceBtn.textContent = "🎤";
+        } else {
+          recognition.start();
+          recognizing = true;
+          voiceBtn.style.backgroundColor = "#1e7e34";
+          voiceBtn.textContent = "🛑";
+        }
+      };
+
+      recognition.onresult = event => {
+        const transcript = event.results[0][0].transcript.trim();
+        userInput.value = transcript;
+        recognizing = false;
+        voiceBtn.style.backgroundColor = "#28a745";
+        voiceBtn.textContent = "🎤";
+        sendMessage();
+      };
+
+      recognition.onerror = () => {
+        recognizing = false;
+        voiceBtn.style.backgroundColor = "#28a745";
+        voiceBtn.textContent = "🎤";
+        alert("Voice recognition error. Please try again.");
+      };
+    } else {
+      voiceBtn.disabled = true;
+      voiceBtn.title = "Voice recognition not supported in this browser.";
+    }
 
     window.onload = async () => {
       const restaurants = await loadRestaurants();
