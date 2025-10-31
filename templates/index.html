@@ -39,12 +39,12 @@
     let selectedRestaurant = "";
     let recognizing = false;
 
-    // 🗣 Speak function (balanced speed)
+    // 🗣 Speak function (faster, smoother, better pacing)
     function speakChunked(text) {
       if (!("speechSynthesis" in window)) return;
       const utter = new SpeechSynthesisUtterance(text.trim());
       utter.lang = "en-US";
-      utter.rate = 1.2;   // slightly slower to match typing
+      utter.rate = 1.35; // slightly faster so voice keeps up
       utter.pitch = 1.05;
       window.speechSynthesis.speak(utter);
     }
@@ -113,7 +113,7 @@
       typeEffect(data.response);
     }
 
-    // 💬 Typing effect perfectly synced with voice
+    // 💬 Typing effect (starts voice early + syncs pacing)
     function typeEffect(text) {
       const msg = document.createElement("div");
       msg.className = "bot-msg";
@@ -122,20 +122,26 @@
 
       let buffer = "";
       let i = 0;
+      let wordCount = 0;
 
       function typingAnimation() {
         if (i < text.length) {
-          msg.textContent += text.charAt(i);
-          buffer += text.charAt(i);
+          const ch = text.charAt(i);
+          msg.textContent += ch;
+          buffer += ch;
 
-          if (buffer.split(" ").length > 10 || text.charAt(i) === ".") {
+          if (ch === " ") wordCount++;
+
+          // Start voice early after 5 words or punctuation
+          if (wordCount >= 5 || ch === "." || ch === "!" || ch === "?") {
             speakChunked(buffer);
             buffer = "";
+            wordCount = 0;
           }
 
           i++;
           chatBox.scrollTop = chatBox.scrollHeight;
-          setTimeout(typingAnimation, 30); // slower typing for realism
+          setTimeout(typingAnimation, 22); // smoother typing pace
         } else {
           if (buffer.trim() !== "") speakChunked(buffer);
         }
