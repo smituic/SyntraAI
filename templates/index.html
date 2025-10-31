@@ -40,7 +40,7 @@
     let recognizing = false;
     let messageFromVoice = false;
 
-    // 🎙️ --- Voice setup ---
+    // 🎙️ Voice setup
     let selectedVoice = null;
     window.speechSynthesis.onvoiceschanged = () => {
       const voices = window.speechSynthesis.getVoices();
@@ -62,23 +62,22 @@
     function processSpeechQueue() {
       if (speaking || speechQueue.length === 0) return;
       const next = speechQueue.shift();
-      window.speechSynthesis.cancel(); // clear any queued voices
+      window.speechSynthesis.cancel(); // clear old voices
       const utter = new SpeechSynthesisUtterance(next);
       utter.lang = "en-US";
-      utter.rate = 1.55; // 🎯 natural, clear speed
+      utter.rate = 1.35; // 🗣️ smooth, natural rate
       utter.pitch = 1.05;
       utter.voice = selectedVoice || null;
       speaking = true;
 
       utter.onend = () => {
         speaking = false;
-        setTimeout(processSpeechQueue, 100); // short pause between sentences
+        setTimeout(processSpeechQueue, 100); // small pause between sentences
       };
 
       window.speechSynthesis.speak(utter);
     }
 
-    // --- UI Helpers ---
     function appendMessage(sender, text) {
       const msg = document.createElement("div");
       msg.className = sender === "user" ? "user-msg" : "bot-msg";
@@ -143,7 +142,7 @@
       typeEffect(data.response);
     }
 
-    // 💬 Typing animation (AI voice only when messageFromVoice = true)
+    // Typing animation
     function typeEffect(text) {
       const msg = document.createElement("div");
       msg.className = "bot-msg";
@@ -191,7 +190,6 @@
       }
     });
 
-    // 🗑 Clear chat
     clearBtn.onclick = async () => {
       if (!selectedRestaurant) {
         alert("Please select a restaurant first.");
@@ -204,7 +202,7 @@
       appendMessage("bot", `Chat history cleared for ${selectedRestaurant}.`);
     };
 
-    // 🎤 Voice input — enables speaking response
+    // 🎤 Voice input
     if ("webkitSpeechRecognition" in window) {
       const recognition = new webkitSpeechRecognition();
       recognition.continuous = false;
