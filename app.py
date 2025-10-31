@@ -34,29 +34,30 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-# Load restaurant data
+# Load all restaurant data
 all_restaurants = load_all_restaurant_data()
 
-
+# Helper function
 def format_name(name: str) -> str:
     return name.replace("_", " ").title()
 
 
+# Core function with memory + role fix
 def ask_syntra(user_text: str, restaurant_key: str, mode: str) -> str:
-    """LLM prompt for both Chat and OrderBot with short-term memory."""
+    """LLM prompt for both Chat and OrderBot with short-term memory and role fix."""
     tz = pytz.timezone("America/Chicago")
     now = datetime.now(tz).strftime("%A, %B %d, %Y at %I:%M %p %Z")
     restaurant_info = all_restaurants.get(restaurant_key, {})
 
-    # Select chat or order collection
+    # Choose correct Mongo collection
     collection_name = f"{restaurant_key}_orders" if mode == "order" else restaurant_key
     collection = db[collection_name]
 
-    # Load last few messages (for memory)
+    # Load last few messages (memory)
     history = list(collection.find({}, {"_id": 0}).sort("_id", -1).limit(6))
-    history.reverse()  # oldest first
+    history.reverse()
 
-    # System instruction
+    # Define system prompt
     if mode == "chat":
         system_prompt = f"""
 You are Syntra AI, a friendly assistant for the restaurant '{restaurant_key}'.
@@ -108,13 +109,17 @@ User: John.
 AI: Thank you, John. Your table for 4 is booked for 8 PM tonight. We look forward to serving you!
 """
 
-    # Prepare message list
+    # Construct message list
     messages = [{"role": "system", "content": system_prompt}]
     for h in history:
         if "role" in h and "message" in h:
-            messages.append({"role": h["role"], "content": h["message"]})
+            role = "assistant" if h["role"] == "bot" else h["role"]
+            if role not in ["system", "user", "assistant"]:
+                role = "assistant"
+            messages.append({"role": role, "content": h["message"]})
     messages.append({"role": "user", "content": user_text})
 
+    # API call
     try:
         resp = client.chat.completions.create(
             model="gpt-3.5-turbo",
@@ -126,6 +131,7 @@ AI: Thank you, John. Your table for 4 is booked for 8 PM tonight. We look forwar
         return f"Sorry, something went wrong: {e}"
 
 
+# Routes
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
@@ -151,12 +157,14 @@ async def ask(request: Request):
     if mode not in ("chat", "order"):
         mode = "chat"
 
+    # Map display name back to file key
     key_map = {format_name(name): name for name in all_restaurants.keys()}
     restaurant_key = key_map.get(restaurant_display, restaurant_display)
 
+    # Generate AI response
     answer = ask_syntra(msg, restaurant_key, mode)
 
-    # Save chat/order in MongoDB (different collections)
+    # Save messages in MongoDB
     collection_name = f"{restaurant_key}_orders" if mode == "order" else restaurant_key
     collection = db[collection_name]
     collection.insert_one({"role": "user", "message": msg, "mode": mode})
