@@ -55,7 +55,7 @@
       const next = speechQueue.shift();
       const utter = new SpeechSynthesisUtterance(next);
       utter.lang = "en-US";
-      utter.rate = 1.35;
+      utter.rate = 1.6; // ⚡ faster voice speed
       utter.pitch = 1.05;
       speaking = true;
       utter.onend = () => {
