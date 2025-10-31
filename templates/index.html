@@ -38,15 +38,32 @@
     const headerTitle = document.getElementById("header-title");
     let selectedRestaurant = "";
     let recognizing = false;
+    let speaking = false;
 
-    // 🗣 Speak function (faster, smoother, better pacing)
-    function speakChunked(text) {
+    // 🗣️ Continuous speech (no stutter between chunks)
+    let speechBuffer = "";
+    let speechTimeout;
+
+    function queueSpeech(text) {
       if (!("speechSynthesis" in window)) return;
-      const utter = new SpeechSynthesisUtterance(text.trim());
-      utter.lang = "en-US";
-      utter.rate = 1.35; // slightly faster so voice keeps up
-      utter.pitch = 1.05;
-      window.speechSynthesis.speak(utter);
+      speechBuffer += text;
+
+      // If already speaking, delay new chunk slightly so it merges smoothly
+      clearTimeout(speechTimeout);
+      speechTimeout = setTimeout(() => {
+        if (!speaking) {
+          const utter = new SpeechSynthesisUtterance(speechBuffer.trim());
+          utter.lang = "en-US";
+          utter.rate = 1.3;
+          utter.pitch = 1.05;
+          speaking = true;
+          utter.onend = () => {
+            speaking = false;
+            speechBuffer = "";
+          };
+          window.speechSynthesis.speak(utter);
+        }
+      }, 150);
     }
 
     function appendMessage(sender, text) {
@@ -113,7 +130,7 @@
       typeEffect(data.response);
     }
 
-    // 💬 Typing effect (starts voice early + syncs pacing)
+    // 💬 Typing + continuous voice sync
     function typeEffect(text) {
       const msg = document.createElement("div");
       msg.className = "bot-msg";
@@ -129,21 +146,20 @@
           const ch = text.charAt(i);
           msg.textContent += ch;
           buffer += ch;
-
           if (ch === " ") wordCount++;
 
-          // Start voice early after 5 words or punctuation
-          if (wordCount >= 5 || ch === "." || ch === "!" || ch === "?") {
-            speakChunked(buffer);
+          // Start voice early and smooth — every ~5 words or punctuation
+          if (wordCount >= 5 || [".", "!", "?"].includes(ch)) {
+            queueSpeech(buffer);
             buffer = "";
             wordCount = 0;
           }
 
           i++;
           chatBox.scrollTop = chatBox.scrollHeight;
-          setTimeout(typingAnimation, 22); // smoother typing pace
+          setTimeout(typingAnimation, 22);
         } else {
-          if (buffer.trim() !== "") speakChunked(buffer);
+          if (buffer.trim() !== "") queueSpeech(buffer);
         }
       }
 
