@@ -36,22 +36,18 @@
 
     // 🧩 Load restaurants from backend
     async function loadRestaurants() {
-      const res = await fetch("/restaurants");
-      const data = await res.json();
-      data.restaurants.forEach(name => {
-        const option = document.createElement("option");
-        option.value = name;
-        option.textContent = name;
-        dropdown.appendChild(option);
-      });
+      try {
+        const res = await fetch("/restaurants");
+        const data = await res.json();
 
-      // 🧠 Auto-select last restaurant (if saved)
-      const lastRestaurant = localStorage.getItem("lastRestaurant");
-      if (lastRestaurant) {
-        dropdown.value = lastRestaurant;
-        selectedRestaurant = lastRestaurant;
-        headerTitle.textContent = `${selectedRestaurant} | Syntra AI`;
-        await loadHistory(selectedRestaurant);
+        data.restaurants.forEach(name => {
+          const option = document.createElement("option");
+          option.value = name;
+          option.textContent = name;
+          dropdown.appendChild(option);
+        });
+      } catch (err) {
+        console.error("Failed to load restaurants:", err);
       }
     }
 
@@ -59,19 +55,23 @@
     async function loadHistory(restaurantName) {
       if (!restaurantName) return;
       chatBox.innerHTML = "";
-      const res = await fetch(`/history/${restaurantName.replace(" ", "_")}`);
-      const data = await res.json();
+      try {
+        const res = await fetch(`/history/${restaurantName.replace(" ", "_")}`);
+        const data = await res.json();
 
-      if (data.history.length > 0) {
-        data.history.forEach(msg =>
-          appendMessage(msg.role === "user" ? "user" : "bot", msg.message)
-        );
-      } else {
-        appendMessage("bot", `Welcome to ${restaurantName}! How may I help you today?`);
+        if (data.history && data.history.length > 0) {
+          data.history.forEach(msg =>
+            appendMessage(msg.role === "user" ? "user" : "bot", msg.message)
+          );
+        } else {
+          appendMessage("bot", `Welcome to ${restaurantName}! How may I help you today?`);
+        }
+      } catch (err) {
+        appendMessage("bot", "Error loading chat history.");
       }
     }
 
-    // When restaurant changes manually
+    // 🧩 When restaurant changes manually
     dropdown.addEventListener("change", async () => {
       selectedRestaurant = dropdown.value;
       localStorage.setItem("lastRestaurant", selectedRestaurant); // save choice
@@ -86,7 +86,7 @@
       await loadHistory(selectedRestaurant);
     });
 
-    // Append messages
+    // 🧩 Append messages to chat box
     function appendMessage(sender, text) {
       const msg = document.createElement("div");
       msg.className = sender === "user" ? "user-msg" : "bot-msg";
@@ -95,7 +95,7 @@
       chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    // Send message
+    // 🧩 Send message
     async function sendMessage() {
       const message = userInput.value.trim();
       if (!message || !selectedRestaurant) return;
@@ -115,7 +115,7 @@
       typeEffect(data.response);
     }
 
-    // Typing animation
+    // 🧩 Typing animation for bot replies
     function typeEffect(text, i = 0) {
       const msg = document.createElement("div");
       msg.className = "bot-msg";
@@ -131,13 +131,23 @@
       typingAnimation();
     }
 
+    // 🧩 Detect Enter key
     sendBtn.onclick = sendMessage;
     userInput.addEventListener("keypress", (e) => {
       if (e.key === "Enter") sendMessage();
     });
 
-    window.onload = () => {
-      loadRestaurants();
+    // 🧩 Auto-load last restaurant on page open
+    window.onload = async () => {
+      await loadRestaurants(); // wait for list to load
+      const lastRestaurant = localStorage.getItem("lastRestaurant");
+
+      if (lastRestaurant) {
+        selectedRestaurant = lastRestaurant;
+        dropdown.value = lastRestaurant;
+        headerTitle.textContent = `${selectedRestaurant} | Syntra AI`;
+        await loadHistory(selectedRestaurant);
+      }
     };
   </script>
 </body>
