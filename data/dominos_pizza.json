@@ -1,22 +1,123 @@
 {
+  "Dominos": {
     "name": "Domino's Pizza",
-    "location": "Various US locations",
-    "founded": 1960,
-    "specialties": ["Hand Tossed Pizza", "Cheese Burst", "Pasta Bowls", "Desserts"],
+    "locations": [
+      {
+        "name": "Domino’s Pizza - West Loop",
+        "address": "1005 W Taylor St, Chicago, IL 60607",
+        "latitude": 41.8698,
+        "longitude": -87.6505,
+        "phone": "(312) 421-9000"
+      },
+      {
+        "name": "Domino’s Pizza - Lakeview",
+        "address": "2811 N Ashland Ave, Chicago, IL 60657",
+        "latitude": 41.9349,
+        "longitude": -87.6681,
+        "phone": "(773) 404-1800"
+      },
+      {
+        "name": "Domino’s Pizza - Hyde Park",
+        "address": "1453 E 53rd St, Chicago, IL 60615",
+        "latitude": 41.7991,
+        "longitude": -87.5905,
+        "phone": "(773) 288-3030"
+      },
+      {
+        "name": "Domino’s Pizza - Lincoln Park",
+        "address": "2400 N Lincoln Ave, Chicago, IL 60614",
+        "latitude": 41.9255,
+        "longitude": -87.6495,
+        "phone": "(773) 348-3030"
+      },
+      {
+        "name": "Domino’s Pizza - Uptown",
+        "address": "4753 N Sheridan Rd, Chicago, IL 60640",
+        "latitude": 41.9683,
+        "longitude": -87.6578,
+        "phone": "(773) 271-3030"
+      }
+    ],
+
+    "deals": [
+      "Mix & Match Deal: Choose any 2 or more items for $6.99 each.",
+      "Carryout Deal: Large 1-topping pizza for $7.99 each (carryout only).",
+      "Weeklong Lunch Deal: $5.99 each for 2-item combo before 3 PM."
+    ],
+
     "menu": {
       "Pizzas": {
-        "Pepperoni Feast": "$13.99",
-        "Veggie Lovers": "$12.99",
-        "Cheese Burst": "$11.99"
+        "Hand Tossed Pepperoni Pizza": 12.99,
+        "Ultimate Pepperoni Pizza": 13.99,
+        "Deluxe Pizza": 14.49,
+        "Meat Lovers Pizza": 15.49,
+        "Buffalo Chicken Pizza": 14.99,
+        "Honolulu Hawaiian Pizza": 14.99,
+        "Wisconsin 6 Cheese Pizza": 13.99,
+        "Philly Cheese Steak Pizza": 15.49,
+        "Spinach & Feta Pizza": 13.99,
+        "Pacific Veggie Pizza": 14.99
       },
-      "Sides": {
-        "Garlic Breadsticks": "$4.99",
-        "Chicken Kickers": "$6.99"
+
+      "Build Your Own": {
+        "Small (10”)": 8.99,
+        "Medium (12”)": 10.99,
+        "Large (14”)": 12.99,
+        "Extra Large (16”)": 14.99,
+        "Gluten Free (10”)": 10.99
       },
+
+      "Pastas": {
+        "Chicken Alfredo": 8.49,
+        "Italian Sausage Marinara": 8.49,
+        "Chicken Carbonara": 8.99,
+        "Pasta Primavera": 8.99
+      },
+
+      "Chicken": {
+        "Boneless Chicken (8 pc)": 8.99,
+        "Buffalo Wings (8 pc)": 9.99,
+        "Honey BBQ Wings (8 pc)": 9.99,
+        "Garlic Parmesan Wings (8 pc)": 9.99
+      },
+
+      "Sandwiches": {
+        "Chicken Bacon Ranch": 7.99,
+        "Italian Sandwich": 7.99,
+        "Philly Cheese Steak Sandwich": 8.49,
+        "Buffalo Chicken Sandwich": 7.99
+      },
+
+      "Salads": {
+        "Classic Garden Salad": 6.49,
+        "Chicken Caesar Salad": 7.49,
+        "Greek Salad": 7.49
+      },
+
+      "Breads & Sides": {
+        "Stuffed Cheesy Bread": 6.99,
+        "Parmesan Bread Bites (16 pc)": 5.99,
+        "Garlic Bread Twists": 6.49,
+        "Cinnamon Bread Twists": 6.49
+      },
+
       "Desserts": {
-        "Chocolate Lava Crunch Cake": "$4.99"
+        "Chocolate Lava Crunch Cakes (2 pc)": 5.49,
+        "Marbled Cookie Brownie (9 pc tray)": 7.49
+      },
+
+      "Drinks": {
+        "Coke (20 oz)": 2.49,
+        "Diet Coke (20 oz)": 2.49,
+        "Sprite (20 oz)": 2.49,
+        "Dasani Water (20 oz)": 2.29
       }
     },
-    "notes": "Fast delivery and online ordering. Known for 30-minute delivery promise."
+
+    "policies": {
+      "delivery": "Delivery available within 5 miles. Minimum order $10. Delivery fee $3.49.",
+      "pickup": "Pickup orders ready within 15 minutes on average.",
+      "refund": "Refunds or replacements available for incorrect or missing items reported within 24 hours."
+    }
   }
-  
+}
