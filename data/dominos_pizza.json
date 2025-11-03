@@ -2,41 +2,22 @@
   "Dominos": {
     "name": "Domino's Pizza",
     "locations": [
-      {
-        "name": "Domino’s Pizza - West Loop",
-        "address": "1005 W Taylor St, Chicago, IL 60607",
-        "latitude": 41.8698,
-        "longitude": -87.6505,
-        "phone": "(312) 421-9000"
-      },
-      {
-        "name": "Domino’s Pizza - Lakeview",
-        "address": "2811 N Ashland Ave, Chicago, IL 60657",
-        "latitude": 41.9349,
-        "longitude": -87.6681,
-        "phone": "(773) 404-1800"
-      },
-      {
-        "name": "Domino’s Pizza - Hyde Park",
-        "address": "1453 E 53rd St, Chicago, IL 60615",
-        "latitude": 41.7991,
-        "longitude": -87.5905,
-        "phone": "(773) 288-3030"
-      },
-      {
-        "name": "Domino’s Pizza - Lincoln Park",
-        "address": "2400 N Lincoln Ave, Chicago, IL 60614",
-        "latitude": 41.9255,
-        "longitude": -87.6495,
-        "phone": "(773) 348-3030"
-      },
-      {
-        "name": "Domino’s Pizza - Uptown",
-        "address": "4753 N Sheridan Rd, Chicago, IL 60640",
-        "latitude": 41.9683,
-        "longitude": -87.6578,
-        "phone": "(773) 271-3030"
-      }
+      { "name": "Domino’s Pizza - West Loop", "address": "1005 W Taylor St, Chicago, IL 60607", "latitude": 41.8698, "longitude": -87.6505, "phone": "(312) 421-9000" },
+      { "name": "Domino’s Pizza - Lakeview", "address": "2811 N Ashland Ave, Chicago, IL 60657", "latitude": 41.9349, "longitude": -87.6681, "phone": "(773) 404-1800" },
+      { "name": "Domino’s Pizza - Hyde Park", "address": "1453 E 53rd St, Chicago, IL 60615", "latitude": 41.7991, "longitude": -87.5905, "phone": "(773) 288-3030" },
+      { "name": "Domino’s Pizza - Lincoln Park", "address": "2400 N Lincoln Ave, Chicago, IL 60614", "latitude": 41.9255, "longitude": -87.6495, "phone": "(773) 348-3030" },
+      { "name": "Domino’s Pizza - Uptown", "address": "4753 N Sheridan Rd, Chicago, IL 60640", "latitude": 41.9683, "longitude": -87.6578, "phone": "(773) 271-3030" },
+
+      { "name": "Domino's – Taylor St (UIC Campus)", "address": "1101 W Taylor St, Chicago, IL 60607", "latitude": 41.8685, "longitude": -87.6511, "phone": "(312) 555-0171" },
+      { "name": "Domino's – Little Italy", "address": "1331 W Roosevelt Rd, Chicago, IL 60608", "latitude": 41.8676, "longitude": -87.6575, "phone": "(312) 555-0172" },
+      { "name": "Domino's – Pilsen", "address": "1800 S Blue Island Ave, Chicago, IL 60608", "latitude": 41.8573, "longitude": -87.6594, "phone": "(312) 555-0173" },
+      { "name": "Domino's – South Loop", "address": "1250 S Michigan Ave, Chicago, IL 60605", "latitude": 41.8677, "longitude": -87.6232, "phone": "(312) 555-0174" },
+      { "name": "Domino's – Bronzeville", "address": "360 E 35th St, Chicago, IL 60616", "latitude": 41.8313, "longitude": -87.6176, "phone": "(312) 555-0175" },
+      { "name": "Domino's – Downtown Loop", "address": "325 N LaSalle Dr, Chicago, IL 60654", "latitude": 41.8881, "longitude": -87.6321, "phone": "(312) 555-0176" },
+      { "name": "Domino's – Humboldt Park", "address": "3300 W North Ave, Chicago, IL 60647", "latitude": 41.9109, "longitude": -87.7104, "phone": "(312) 555-0177" },
+      { "name": "Domino's – Logan Square", "address": "2601 N Milwaukee Ave, Chicago, IL 60647", "latitude": 41.9290, "longitude": -87.7077, "phone": "(312) 555-0178" },
+      { "name": "Domino's – Forest Park", "address": "7426 Madison St, Forest Park, IL 60130", "latitude": 41.8798, "longitude": -87.8133, "phone": "(312) 555-0179" },
+      { "name": "Domino's – O'Hare Area", "address": "5050 N Cumberland Ave, Chicago, IL 60656", "latitude": 41.9734, "longitude": -87.8369, "phone": "(312) 555-0180" }
     ],
 
     "deals": [
@@ -58,7 +39,6 @@
         "Spinach & Feta Pizza": 13.99,
         "Pacific Veggie Pizza": 14.99
       },
-
       "Build Your Own": {
         "Small (10”)": 8.99,
         "Medium (12”)": 10.99,
@@ -66,46 +46,39 @@
         "Extra Large (16”)": 14.99,
         "Gluten Free (10”)": 10.99
       },
-
       "Pastas": {
         "Chicken Alfredo": 8.49,
         "Italian Sausage Marinara": 8.49,
         "Chicken Carbonara": 8.99,
         "Pasta Primavera": 8.99
       },
-
       "Chicken": {
         "Boneless Chicken (8 pc)": 8.99,
         "Buffalo Wings (8 pc)": 9.99,
         "Honey BBQ Wings (8 pc)": 9.99,
         "Garlic Parmesan Wings (8 pc)": 9.99
       },
-
       "Sandwiches": {
         "Chicken Bacon Ranch": 7.99,
         "Italian Sandwich": 7.99,
         "Philly Cheese Steak Sandwich": 8.49,
         "Buffalo Chicken Sandwich": 7.99
       },
-
       "Salads": {
         "Classic Garden Salad": 6.49,
         "Chicken Caesar Salad": 7.49,
         "Greek Salad": 7.49
       },
-
       "Breads & Sides": {
         "Stuffed Cheesy Bread": 6.99,
         "Parmesan Bread Bites (16 pc)": 5.99,
         "Garlic Bread Twists": 6.49,
         "Cinnamon Bread Twists": 6.49
       },
-
       "Desserts": {
         "Chocolate Lava Crunch Cakes (2 pc)": 5.49,
         "Marbled Cookie Brownie (9 pc tray)": 7.49
       },
-
       "Drinks": {
         "Coke (20 oz)": 2.49,
         "Diet Coke (20 oz)": 2.49,
