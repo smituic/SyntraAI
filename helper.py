@@ -1,5 +1,6 @@
 import os
 import json
+import uuid
 
 def load_all_restaurant_data():
     """
@@ -26,3 +27,6 @@ def load_all_restaurant_data():
                 print(f"⚠️ Error loading {filename}: {e}")
 
     return all_data
+
+def make_session_id():
+    return str(uuid.uuid4())
