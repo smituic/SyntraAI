@@ -14,19 +14,52 @@ const chatMessages = document.getElementById("chat-messages");
 const inputBox = document.getElementById("user-message");
 const sendBtn = document.getElementById("send-btn");
 
+
+
 const chatBubble = document.getElementById("chat-bubble");
 const chatOverlay = document.getElementById("chat-overlay");
+const chatBox = document.getElementById("chat-box");
 const closeChat = document.getElementById("close-chat");
 
-// Show chat window
-chatBubble.addEventListener("click", () => {
-  chatOverlay.classList.remove("hidden");
+// ✅ At start — only bubble visible
+window.addEventListener("DOMContentLoaded", () => {
+  chatOverlay.classList.remove("active");
+  chatOverlay.style.display = "none";
+  chatBubble.style.display = "flex";
 });
 
-// Close chat window
-closeChat.addEventListener("click", () => {
-  chatOverlay.classList.add("hidden");
+// 🗨️ When user clicks bubble → show chat, hide bubble
+chatBubble.addEventListener("click", (e) => {
+  e.stopPropagation();
+  chatBubble.style.display = "none";
+  chatOverlay.style.display = "flex";
+  setTimeout(() => chatOverlay.classList.add("active"), 10);
 });
+
+// ❌ Close button → hide chat, show bubble
+closeChat.addEventListener("click", (e) => {
+  e.stopPropagation();
+  chatOverlay.classList.remove("active");
+  setTimeout(() => {
+    chatOverlay.style.display = "none";
+    chatBubble.style.display = "flex";
+  }, 300);
+});
+
+// 🖱 Click anywhere outside chat → hide chat, show bubble
+document.addEventListener("click", (e) => {
+  if (!chatBox.contains(e.target) && !chatBubble.contains(e.target)) {
+    chatOverlay.classList.remove("active");
+    setTimeout(() => {
+      chatOverlay.style.display = "none";
+      chatBubble.style.display = "flex";
+    }, 300);
+  }
+});
+
+
+
+  
 
 
 // 3. Handle sending a message

@@ -7,24 +7,25 @@
 </head>
 <body>
 
-  <!-- Floating Chat Bubble -->
-  <div id="chat-bubble">💬</div>
+<!-- Floating Chat Bubble -->
+<div id="chat-bubble">💬</div>
 
-  <!-- Chat Widget (hidden by default) -->
-  <div id="chat-overlay" class="hidden">
-    <div id="chat-box">
-      <div id="chat-header">
-        🍽 Chat with your waiter
-        <span id="close-chat">&times;</span>
-      </div>
-      <div id="chat-messages"></div>
-      <div id="chat-input">
-        <input type="text" id="user-message" placeholder="Type your message..." />
-        <button id="send-btn">Send</button>
-      </div>
+<!-- Chat overlay always present but transparent -->
+<div id="chat-overlay">
+  <div id="chat-box" class="hidden">
+    <div id="chat-header">
+      🍽 Chat with your waiter
+      <span id="close-chat">&times;</span>
+    </div>
+    <div id="chat-messages"></div>
+    <div id="chat-input">
+      <input type="text" id="user-message" placeholder="Type your message..." />
+      <button id="send-btn">Send</button>
     </div>
   </div>
+</div>
 
-  <script src="/static/chat.js"></script>
+<script src="/static/chat.js"></script>
+
 </body>
 </html>
