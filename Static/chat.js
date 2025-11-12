@@ -86,27 +86,63 @@ async function sendMessage() {
     }
 }
 
-// 4. Send message to FastAPI /ask
 async function sendToServer(msg, lat, lon) {
-    try {
-        const response = await fetch("/ask", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                message: msg,
-                restaurant: restaurant_key,
-                mode: "order",
-                session_id: session_id,
-                latitude: lat,
-                longitude: lon
-            })
-        });
-        const data = await response.json();
-        appendMessage(data.response, "bot");
-    } catch (e) {
-        appendMessage("Error: Could not reach server", "bot");
-    }
+  try {
+      const response = await fetch("/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+              message: msg,
+              restaurant: restaurant_key,
+              mode: "order",
+              session_id: session_id,
+              latitude: lat,
+              longitude: lon
+          })
+      });
+
+      const data = await response.json();
+      let botReply = data.response;
+
+      // ---------------- JSON Extraction -----------------
+      const start = botReply.indexOf("---ORDER_JSON_START---");
+      const end = botReply.indexOf("---ORDER_JSON_END---");
+
+      let cleanText = botReply;
+      let orderJson = null;
+
+      if (start !== -1 && end !== -1) {
+          const jsonString = botReply.substring(
+              start + "---ORDER_JSON_START---".length,
+              end
+          ).trim();
+
+          try {
+              orderJson = JSON.parse(jsonString);
+          } catch (err) {
+              console.error("JSON parse error:", err);
+          }
+
+          cleanText = botReply.replace(
+              botReply.substring(start, end + "---ORDER_JSON_END---".length),
+              ""
+          ).trim();
+      }
+
+      // ---- Show only clean text ----
+      appendMessage(cleanText, "bot");
+
+      // ---- If JSON exists ----
+      if (orderJson) {
+          renderOrderSummary(orderJson.order);
+      }
+
+  } catch (e) {
+      appendMessage("Error: Could not reach server", "bot");
+  }
 }
+
+
 
 // 5. Helper to append messages
 function appendMessage(msg, role) {
@@ -121,3 +157,25 @@ function appendMessage(msg, role) {
 sendBtn.addEventListener("click", sendMessage);
 inputBox.addEventListener("keydown", e => { if(e.key === "Enter") sendMessage(); });
 
+function renderOrderSummary(order) {
+  const div = document.createElement("div");
+  div.className = "order-summary-card";
+
+  div.innerHTML = `
+      <h3>Order Confirmed ✔️</h3>
+      <p><strong>Name:</strong> ${order.customer_name}</p>
+      <p><strong>Pickup/Delivery:</strong> ${order.pickup_or_delivery}</p>
+
+      <h4>Items:</h4>
+      <ul>
+          ${order.items.map(i => `
+              <li>${i.qty} × ${i.name} — $${i.price}</li>
+          `).join("")}
+      </ul>
+
+      <h4>Total: $${order.total}</h4>
+  `;
+
+  chatMessages.appendChild(div);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
