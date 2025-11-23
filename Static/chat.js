@@ -8,7 +8,9 @@ if (!session_id) {
 }
 
 // 2. Hardcode restaurant_key for this page
-const restaurant_key = "dominos_pizza"; // replace per restaurant page
+const scriptTag = document.currentScript;
+const restaurant_key = scriptTag.getAttribute("data-restaurant");
+
 
 const chatMessages = document.getElementById("chat-messages");
 const inputBox = document.getElementById("user-message");
