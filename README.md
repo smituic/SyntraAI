@@ -4,6 +4,11 @@ Syntra AI is a backend platform designed to help restaurants integrate AI assist
 It provides structured ingestion of restaurant menus, FAQs, metadata, and location data.
 The system exposes clean REST APIs powered by FastAPI, MongoDB Atlas, and OpenAI LLMs, enabling restaurants to offer intelligent chat-based ordering without POS integration.
 
+## 🎥 Demo Video
+
+[![Syntra AI Demo](https://img.youtube.com/vi/142uBCYuPV8/hqdefault.jpg)](https://youtu.be/142uBCYuPV8)
+
+
 🌟 Features
 
 Multi-restaurant support
