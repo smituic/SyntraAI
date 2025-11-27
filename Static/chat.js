@@ -60,6 +60,18 @@ document.addEventListener("click", (e) => {
   }
 });
 
+function showTyping() {
+    const typing = document.getElementById("typing-indicator");
+    typing.style.display = "flex";
+    chatMessages.appendChild(typing);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function hideTyping() {
+    const typing = document.getElementById("typing-indicator");
+    typing.style.display = "none";
+}
+
 
 
   
@@ -72,6 +84,8 @@ async function sendMessage() {
 
     // display user message
     appendMessage(msg, "user");
+    showTyping();
+
     inputBox.value = "";
 
     // get geolocation (optional)
@@ -97,7 +111,7 @@ async function sendToServer(msg, lat, lon) {
           body: JSON.stringify({
               message: msg,
               restaurant: restaurant_key,
-              mode: "order",
+              mode: "chat",
               session_id: session_id,
               latitude: lat,
               longitude: lon
@@ -133,6 +147,8 @@ async function sendToServer(msg, lat, lon) {
       }
 
       // ---- Show only clean text ----
+      hideTyping();
+
       appendMessage(cleanText, "bot");
 
       // ---- If JSON exists ----
@@ -150,35 +166,43 @@ async function sendToServer(msg, lat, lon) {
 // 5. Helper to append messages
 function appendMessage(msg, role) {
     const div = document.createElement("div");
-    div.className = "message " + role;
+    div.className = "message " + role;  // user or bot
     div.textContent = msg;
+
     chatMessages.appendChild(div);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
+
 
 // 6. Event listeners
 sendBtn.addEventListener("click", sendMessage);
 inputBox.addEventListener("keydown", e => { if(e.key === "Enter") sendMessage(); });
 
 function renderOrderSummary(order) {
-  const div = document.createElement("div");
-  div.className = "order-summary-card";
-
-  div.innerHTML = `
-      <h3>Order Confirmed ✔️</h3>
-      <p><strong>Name:</strong> ${order.customer_name}</p>
-      <p><strong>Pickup/Delivery:</strong> ${order.pickup_or_delivery}</p>
-
-      <h4>Items:</h4>
-      <ul>
-          ${order.items.map(i => `
-              <li>${i.qty} × ${i.name} — $${i.price}</li>
-          `).join("")}
-      </ul>
-
-      <h4>Total: $${order.total}</h4>
-  `;
-
-  chatMessages.appendChild(div);
-  chatMessages.scrollTop = chatMessages.scrollHeight;
-}
+    const div = document.createElement("div");
+    div.className = "order-summary-card";
+  
+    div.innerHTML = `
+        <h3>Order Confirmed ✔️</h3>
+        <p><strong>Name:</strong> ${order.customer_name ?? "Customer"}</p>
+        <p><strong>Pickup/Delivery:</strong> ${order.pickup_or_delivery ?? "pickup"}</p>
+        ${order.address ? `<p><strong>Address:</strong> ${order.address}</p>` : ""}
+  
+        <h4>Items:</h4>
+        <ul>
+            ${order.items
+              .map(
+                (i) => `
+                <li>${i.qty ?? 1} × ${i.name ?? "(item)"} — $${i.price ?? 0}</li>
+            `
+              )
+              .join("")}
+        </ul>
+  
+        <h4>Total: $${order.total ?? 0}</h4>
+    `;
+  
+    chatMessages.appendChild(div);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+  

@@ -1,0 +1,465 @@
+[
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "pizzas_hand_tossed_pepperoni_pizza",
+      "name": "Hand Tossed Pepperoni Pizza",
+      "category": "Pizzas",
+      "base_price": 12.99,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    },
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "pizzas_ultimate_pepperoni_pizza",
+      "name": "Ultimate Pepperoni Pizza",
+      "category": "Pizzas",
+      "base_price": 13.99,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    },
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "pizzas_deluxe_pizza",
+      "name": "Deluxe Pizza",
+      "category": "Pizzas",
+      "base_price": 14.49,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    },
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "pizzas_meat_lovers_pizza",
+      "name": "Meat Lovers Pizza",
+      "category": "Pizzas",
+      "base_price": 15.49,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    },
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "pizzas_buffalo_chicken_pizza",
+      "name": "Buffalo Chicken Pizza",
+      "category": "Pizzas",
+      "base_price": 14.99,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    },
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "pizzas_honolulu_hawaiian_pizza",
+      "name": "Honolulu Hawaiian Pizza",
+      "category": "Pizzas",
+      "base_price": 14.99,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    },
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "pizzas_wisconsin_6_cheese_pizza",
+      "name": "Wisconsin 6 Cheese Pizza",
+      "category": "Pizzas",
+      "base_price": 13.99,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    },
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "pizzas_philly_cheese_steak_pizza",
+      "name": "Philly Cheese Steak Pizza",
+      "category": "Pizzas",
+      "base_price": 15.49,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    },
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "pizzas_spinach_feta_pizza",
+      "name": "Spinach & Feta Pizza",
+      "category": "Pizzas",
+      "base_price": 13.99,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    },
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "pizzas_pacific_veggie_pizza",
+      "name": "Pacific Veggie Pizza",
+      "category": "Pizzas",
+      "base_price": 14.99,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    },
+  
+    
+  
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "build_your_own_small_10",
+      "name": "Small (10”)",
+      "category": "Build Your Own",
+      "base_price": 8.99,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    },
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "build_your_own_medium_12",
+      "name": "Medium (12”)",
+      "category": "Build Your Own",
+      "base_price": 10.99,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    },
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "build_your_own_large_14",
+      "name": "Large (14”)",
+      "category": "Build Your Own",
+      "base_price": 12.99,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    },
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "build_your_own_extra_large_16",
+      "name": "Extra Large (16”)",
+      "category": "Build Your Own",
+      "base_price": 14.99,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    },
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "build_your_own_gluten_free_10",
+      "name": "Gluten Free (10”)",
+      "category": "Build Your Own",
+      "base_price": 10.99,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    },
+  
+
+  
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "pastas_chicken_alfredo",
+      "name": "Chicken Alfredo",
+      "category": "Pastas",
+      "base_price": 8.49,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    },
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "pastas_italian_sausage_marinara",
+      "name": "Italian Sausage Marinara",
+      "category": "Pastas",
+      "base_price": 8.49,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    },
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "pastas_chicken_carbonara",
+      "name": "Chicken Carbonara",
+      "category": "Pastas",
+      "base_price": 8.99,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    },
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "pastas_pasta_primavera",
+      "name": "Pasta Primavera",
+      "category": "Pastas",
+      "base_price": 8.99,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    },
+  
+
+  
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "chicken_boneless_8pc",
+      "name": "Boneless Chicken (8 pc)",
+      "category": "Chicken",
+      "base_price": 8.99,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    },
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "chicken_buffalo_wings_8pc",
+      "name": "Buffalo Wings (8 pc)",
+      "category": "Chicken",
+      "base_price": 9.99,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    },
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "chicken_honey_bbq_wings_8pc",
+      "name": "Honey BBQ Wings (8 pc)",
+      "category": "Chicken",
+      "base_price": 9.99,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    },
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "chicken_garlic_parmesan_wings_8pc",
+      "name": "Garlic Parmesan Wings (8 pc)",
+      "category": "Chicken",
+      "base_price": 9.99,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    },
+  
+    
+  
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "sandwich_chicken_bacon_ranch",
+      "name": "Chicken Bacon Ranch",
+      "category": "Sandwiches",
+      "base_price": 7.99,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    },
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "sandwich_italian_sandwich",
+      "name": "Italian Sandwich",
+      "category": "Sandwiches",
+      "base_price": 7.99,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    },
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "sandwich_philly_cheese_steak",
+      "name": "Philly Cheese Steak Sandwich",
+      "category": "Sandwiches",
+      "base_price": 8.49,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    },
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "sandwich_buffalo_chicken",
+      "name": "Buffalo Chicken Sandwich",
+      "category": "Sandwiches",
+      "base_price": 7.99,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    },
+  
+   
+  
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "salad_classic_garden_salad",
+      "name": "Classic Garden Salad",
+      "category": "Salads",
+      "base_price": 6.49,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    },
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "salad_chicken_caesar_salad",
+      "name": "Chicken Caesar Salad",
+      "category": "Salads",
+      "base_price": 7.49,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    },
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "salad_greek_salad",
+      "name": "Greek Salad",
+      "category": "Salads",
+      "base_price": 7.49,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    },
+  
+   
+  
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "sides_stuffed_cheesy_bread",
+      "name": "Stuffed Cheesy Bread",
+      "category": "Breads & Sides",
+      "base_price": 6.99,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    },
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "sides_parmesan_bread_bites_16pc",
+      "name": "Parmesan Bread Bites (16 pc)",
+      "category": "Breads & Sides",
+      "base_price": 5.99,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    },
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "sides_garlic_bread_twists",
+      "name": "Garlic Bread Twists",
+      "category": "Breads & Sides",
+      "base_price": 6.49,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    },
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "sides_cinnamon_bread_twists",
+      "name": "Cinnamon Bread Twists",
+      "category": "Breads & Sides",
+      "base_price": 6.49,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    },
+  
+   
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "desserts_chocolate_lava_crunch_cakes",
+      "name": "Chocolate Lava Crunch Cakes (2 pc)",
+      "category": "Desserts",
+      "base_price": 5.49,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    },
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "desserts_marbled_cookie_brownie",
+      "name": "Marbled Cookie Brownie (9 pc tray)",
+      "category": "Desserts",
+      "base_price": 7.49,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    },
+  
+    
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "drinks_coke_20oz",
+      "name": "Coke (20 oz)",
+      "category": "Drinks",
+      "base_price": 2.49,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    },
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "drinks_diet_coke_20oz",
+      "name": "Diet Coke (20 oz)",
+      "category": "Drinks",
+      "base_price": 2.49,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    },
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "drinks_sprite_20oz",
+      "name": "Sprite (20 oz)",
+      "category": "Drinks",
+      "base_price": 2.49,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    },
+    {
+      "restaurant_key": "dominos_pizza",
+      "item_id": "drinks_dasani_water_20oz",
+      "name": "Dasani Water (20 oz)",
+      "category": "Drinks",
+      "base_price": 2.29,
+      "description": "",
+      "variants": {},
+      "options": {},
+      "availability": true
+    }
+  ]
+  

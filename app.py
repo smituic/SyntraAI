@@ -71,17 +71,12 @@ def ask_syntra(user_text: str, restaurant_key: str, mode: str, session_id: str) 
     tz = pytz.timezone("America/Chicago")
     now = datetime.now(tz).strftime("%A, %B %d, %Y at %I:%M %p %Z")
 
-    # fetch restaurant doc from DB
+    # Fetch restaurant doc
     restaurant_doc = db.restaurants.find_one({"key": restaurant_key})
-    if not restaurant_doc:
-        # fallback to your earlier JSON approach if needed
-        restaurant_info = all_restaurants.get(restaurant_key, {}) if 'all_restaurants' in globals() else {}
-        display_name = restaurant_key.replace("_", " ").title()
-    else:
-        restaurant_info = restaurant_doc.get("raw", {})
-        display_name = restaurant_doc.get("display_name", restaurant_doc.get("name", restaurant_key))
+    display_name = restaurant_doc.get("display_name", restaurant_key.replace("_", " ").title())
+    restaurant_info = restaurant_doc.get("raw", {})
 
-    # Build a compact menu for the prompt — don't send huge menus (limit to 40 items)
+    # -------------------- Load Menu --------------------
     menu_cursor = db.menus.find({"restaurant_key": restaurant_key, "availability": True})
     menu_list = []
     for m in menu_cursor:
@@ -92,60 +87,123 @@ def ask_syntra(user_text: str, restaurant_key: str, mode: str, session_id: str) 
             "price": m.get("price"),
             "description": m.get("description", "")
         })
-    # If menu very large, we send top categories or first N items only
-    if len(menu_list) > 60:
-        menu_for_prompt = menu_list[:60]
-    else:
-        menu_for_prompt = menu_list
 
-    # Load session-specific recent messages for memory
+    # Menu cutoff to avoid huge context
+    menu_for_prompt = menu_list[:60]
+
+    # -------------------- Load Session History --------------------
     coll = db[f"{restaurant_key}_chat"]
-    recent = list(coll.find({"session_id": session_id}, {"_id": 0}).sort("timestamp", -1).limit(8))
-    recent.reverse()  # chronological order
+    recent = list(coll.find({"session_id": session_id}, {"_id": 0})
+                  .sort("timestamp", -1).limit(8))
+    recent.reverse()
 
-    # Build system prompt — instruct model to *act like a waiter*
-    brand_voice = restaurant_doc.get("raw", {}).get("brand_voice", {})
-    brand_tone = brand_voice.get("tone", "friendly and professional")
-    greeting = brand_voice.get("greeting_style", f"Hi! Welcome to {display_name} — how can I help you today?")
+    # -------------------- ORDER MODE STICKINESS --------------------
+    # If the bot was already handling an order, stay in order mode
+    for h in reversed(recent):
+        if h["role"] == "bot":
+            msg = h["message"].lower()
+            # These phrases indicate we are mid-order
+            order_indicators = [
+                "how many", "quantity", "pickup", "delivery",
+                "would this be", "name for the order",
+                "anything else you want", "anything else you'd like",
+                "you wanna add", "you want to add", "add anything"
+            ]
+            if any(key in msg for key in order_indicators):
+                mode = "order"
+                break
 
-    system_prompt = f"""
-You are a virtual WAITER for the restaurant '{display_name}'. Act like a trained, friendly waiter with {brand_tone} tone.
-You have access to the restaurant's menu below. Always confirm items, sizes, quantities, pickup/delivery choice, and final price before placing an order.
-You MUST ask for any missing required info (size, pickup/delivery, address for delivery, name for reservation).
-Use upsells when appropriate (suggest side dishes or drinks), but do so naturally.
 
-Restaurant info (for reference):
-Name: {display_name}
+   # -------------------- Build System Prompt Based on Mode --------------------
+    if mode == "chat":
+        system_prompt = f"""
+You are a super friendly, casual, human-like waiter at {display_name}.
+You talk like a real waiter at a relaxed restaurant — fun, warm, a little playful, NEVER formal.
+
+VIBE RULES:
+- Say “hey!” or “hey there!” instead of “hello”
+- Use natural speech (“oh nice!”, “haha yeah same”, “for sure!”, “got you!”)
+- Light emoji allowed 😊🔥🍕 (max 1 per message)
+- Small talk is encouraged (“how’s your day going?”, “my day’s been pretty chill haha”)
+- Sound HUMAN, not professional or robotic.
+
+WHAT YOU CAN DO:
+- answer greetings (“how are you?”, “sup?”, “how’s your day?”)
+- chat casually
+- recommend items
+- explain menu categories
+- tell user what’s popular
+
+WHAT YOU CANNOT DO (in chat mode):
+- start an order unless the user clearly wants to order
+- ask for pickup/delivery info
+- generate order JSON
+
+MENU REFERENCE (don’t list everything unless asked):
+{json.dumps(menu_for_prompt, indent=2)}
+
 Policies: {json.dumps(restaurant_doc.get('raw', {}).get('policies', {}), indent=2)}
 Deals: {json.dumps(restaurant_doc.get('raw', {}).get('deals', []), indent=2)}
-Menu (sample items): {json.dumps(menu_for_prompt, indent=2)}
 
-Important rules:
-1) Be conversational and human-like.
-2) NEVER invent menu items or prices. If uncertain, ask clarifying questions.
-3) When an order is fully confirmed, output the order JSON EXACTLY in this format:
+Keep messages short, warm, and super friendly.
+    """
+
+    else:  # ORDER MODE
+        system_prompt = f"""
+You are now in ORDER MODE for {display_name}.
+The user is placing an order. Stay friendly and casual, but ensure accuracy.
+
+ORDER FLOW RULES (follow them strictly):
+
+1. Confirm the requested item
+2. Always Confirm size/flavor 
+3. Confirm quantity
+After the user confirms they do NOT want anything else, your next message MUST ask:
+“Would this be for pickup or delivery?”  
+Never end the conversation before asking this.
+4. Ask: "Would this be for pickup or delivery?"
+5. If it's for delivery, Always ask for address.
+6. Ask: "And can I get a name for the order?"
+7. Summarize the order clearly
+8. THEN output the order JSON ONLY between these markers:
+
+
+
+When you output the final JSON, it MUST match this structure EXACTLY:
 
 ---ORDER_JSON_START---
 {{
   "order": {{
-     ...
+    "items": [
+      {{
+        "item_id": "string",
+        "name": "string",
+        "qty": 1,
+        "price": 0
+      }}
+    ],
+    "total": 0,
+    "pickup_or_delivery": "pickup or delivery",
+    "customer_name": "string",
+    "address": "string (required if delivery)",
+    "notes": ""
   }}
 }}
 ---ORDER_JSON_END---
 
-RULES:
-- The markers MUST be alone on their own lines.
-- No text before or after the markers on the same line.
-- No extra spaces.
-- Human message should come BEFORE the JSON block, not after.
+IMPORTANT:
+• Keys MUST be spelled exactly like this: item_id, name, qty, price, total, pickup_or_delivery, customer_name, address, notes
+• Do NOT invent new keys.
+• Do NOT rename keys.
+• Do NOT wrap numbers as strings.
+• Do NOT output JSON until ALL information is collected.
 
-   The JSON should look like: {{ "order": {{ "items":[{{"item_id":"...","name":"...","qty":1,"price":9.99}}], "total": XX.XX, "pickup_or_delivery":"pickup", "customer_name":"...", "notes": "..." }} }}
-4) If the user asks unrelated questions, reply: "I can help with orders, reservations, and menu questions for this restaurant."
-5) Keep responses concise; ask one question at a time if clarification is needed.
 
-Current local time: {now}
-{greeting}
+Menu reference:
+{json.dumps(menu_for_prompt, indent=2)}
 """
+
+
 
     # Build message list: system + session history + user
     messages = [{"role": "system", "content": system_prompt}]
@@ -212,6 +270,63 @@ async def ask(request: Request):
         locations = restaurant_doc.get("raw", {}).get("locations", [])
         answer = find_nearest_store(lat, lon, locations)
     else:
+         # -------------------- Intent Detection --------------------
+        # Look at the last bot message to understand context
+        last_bot_msg = None
+        try:
+            last_chat = coll.find_one(
+                {"session_id": session_id, "role": "bot"},
+                sort=[("timestamp", -1)]
+            )
+            if last_chat:
+                last_bot_msg = last_chat.get("message", "").lower()
+        except:
+            pass
+
+        # New rule: if last bot message mentioned a specific item OR suggested adding items → switch to order mode
+        order_context_keywords = ["wings", "pizza", "pasta", "sides", "drinks", "add"] 
+        confirmation_keywords = ["yes", "yeah", "ok", "sure", "no", "not that", "that's all", "that’s all"]
+
+        if last_bot_msg and any(word in last_bot_msg for word in order_context_keywords):
+            if msg.lower() in confirmation_keywords:
+                mode = "order"
+
+            else:
+                mode = "chat"
+        
+        # Call AI
+        # -------------------- ORDER INTENT DETECTION --------------------
+        msg_lower = msg.lower()
+
+        order_keywords = [
+            "i want", "i'll take", "i will take", "get me", "give me",
+            "order", "buy", "add", "take", "i want to order",
+            "i want a", "i want the", "i want pizza", "i want wings"
+        ]
+
+        confirmation_words = ["no", "nope", "that's it", "thats it", "no that's all", "no thats all", "ok", "okay"]
+
+        menu_keywords = ["pizza", "wings", "pasta", "salad", "sandwich", "drinks", "sides"]
+        size_keywords = ["small", "medium", "large","xl", "extra large", "extra-large",
+            "10", "12", "14", "16","10 inch", "12 inch", "14 inch", "16 inch"
+        ]
+
+        # 1. If the user explicitly expresses an order
+        if any(k in msg_lower for k in order_keywords):
+            mode = "order"
+
+        # 2. If user replies after item suggestion like "no", "that's it", etc.
+        if any(word == msg_lower for word in confirmation_words):
+            mode = "order"
+
+        # 3. If message mentions a menu item
+        if any(word in msg_lower for word in menu_keywords):
+            mode = "order"
+
+        # 4. If message mentions size of a item
+        if msg_lower in size_keywords or any(word in msg_lower for word in size_keywords):
+            mode = "order"
+
         answer = ask_syntra(msg, restaurant_key, mode, session_id)
 
     # Save messages in DB with session_id & timestamp
@@ -248,14 +363,3 @@ async def clear_chat_history(restaurant_key: str):
 async def clear_order_history(restaurant_key: str):
     db[f"{restaurant_key}_orders"].delete_many({})
     return JSONResponse({"ok": True, "cleared": f"{restaurant_key}_orders"})
-
-
-# -------------------- Notes for Developers --------------------
-# 1. Supports both chat and order modes (switchable via dropdown).
-# 2. Uses MongoDB to store chat/order history per restaurant.
-# 3. Data is loaded from /data/*.json for each restaurant.
-# 4. Added geopy-based nearest store logic (lat/lon -> closest match).
-# 5. Fully UTF-8 safe (fixes Windows cp1252 decode issue).
-# 6. Works with updated index.html geolocation button.
-# 7. Automatically detects nested JSONs (like {"Dominos": {...}}).
-# 8. Ready for production testing.

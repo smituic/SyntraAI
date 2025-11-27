@@ -10,19 +10,27 @@
 <!-- Floating Chat Bubble -->
 <div id="chat-bubble">💬</div>
 
-<!-- Chat overlay always present but transparent -->
+<!-- Chat overlay -->
 <div id="chat-overlay">
   <div id="chat-box" class="hidden">
     <div id="chat-header">
       🍽 Chat with your waiter
       <span id="close-chat">&times;</span>
     </div>
+
     <div id="chat-messages"></div>
+
+    <!-- Typing indicator MUST be inside chat-messages container -->
+    <div id="typing-indicator" class="typing-indicator" style="display:none;">
+      <span></span><span></span><span></span>
+    </div>
+
     <div id="chat-input">
       <input type="text" id="user-message" placeholder="Type your message..." />
       <button id="send-btn">Send</button>
     </div>
   </div>
+
 </div>
 
 <script src="/static/chat.js"></script>
